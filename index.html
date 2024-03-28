@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stopwatch</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+    }
+    #stopwatch {
+        font-size: 2rem;
+        margin: 50px auto;
+    }
+    button {
+        padding: 10px 20px;
+        font-size: 1rem;
+        margin: 10px;
+        cursor: pointer;
+    }
+    #splitsTable {
+        margin-top: 20px;
+        border-collapse: collapse;
+        width: 100%;
+    }
+    #splitsTable th, #splitsTable td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+    }
+    #splitsTable th {
+        background-color: #f2f2f2;
+    }
+    .editable {
+        cursor: pointer;
+    }
+    .editable input {
+        border: none;
+        width: 100%;
+        background-color: transparent;
+    }
+</style>
+</head>
+<body>
+
+<div id="stopwatch">00:00:00</div>
+<button id="startStopBtn">Start</button>
+<button id="splitBtn">Split</button>
+<button id="resetBtn">Reset</button>
+<div id="splitsContainer"></div>
+
+<script>
+    let startTime;
+    let lastStartTimestamp;
+    let running = false;
+    let pausedTime = 0;
+    let splits = [];
+
+    function startStopwatch() {
+        if (!running) {
+            startTime = performance.now() - pausedTime;
+            lastStartTimestamp = Date.now();
+            running = true;
+            animateStopwatch();
+            document.getElementById('startStopBtn').textContent = 'Pause';
+        }
+    }
+
+    function pauseStopwatch() {
+        if (running) {
+            running = false;
+            pausedTime = performance.now() - startTime;
+            document.getElementById('startStopBtn').textContent = 'Start';
+        }
+    }
+
+    function resetStopwatch() {
+        running = false;
+        pausedTime = 0;
+        updateStopwatch(0);
+        document.getElementById('startStopBtn').textContent = 'Start';
+        document.getElementById('splitsContainer').innerHTML = '';
+        splits = [];
+    }
+
+    function splitStopwatch() {
+        if (running) {
+            pauseStopwatch();
+            const endTime = Date.now();
+            const splitTime = endTime - lastStartTimestamp;
+            const split = {
+                startTime: new Date(lastStartTimestamp).toLocaleString(),
+                endTime: new Date(endTime).toLocaleString(),
+                duration: splitTime,
+                description: '',
+                customer: '',
+                project: ''
+            };
+            splits.push(split);
+            updateAllTimeSplits(split);
+            displaySplits();
+            startStopwatch();
+        }
+    }
+
+    function updateAllTimeSplits(split) {
+        allTimeSplits = JSON.parse(localStorage.getItem('allTimeSplits'));
+        if (allTimeSplits) {
+            allTimeSplits.push(split);
+        } else {
+            allTimeSplits = [split];
+        }
+        localStorage.setItem("allTimeSplits", JSON.stringify(allTimeSplits));
+    }
+
+    function animateStopwatch() {
+        if (running) {
+            requestAnimationFrame(animateStopwatch);
+            const elapsedTime = performance.now() - startTime;
+            updateStopwatch(elapsedTime);
+        }
+    }
+
+    function updateStopwatch(elapsedTime) {
+        const totalSeconds = Math.floor(elapsedTime / 1000);
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+
+        const formattedTime = pad(hours) + ':' + pad(minutes) + ':' + pad(seconds);
+        document.getElementById('stopwatch').textContent = formattedTime;
+    }
+
+    function pad(num) {
+        return (num < 10 ? '0' : '') + num;
+    }
+
+    function displaySplits() {
+        const container = document.getElementById('splitsContainer');
+        container.innerHTML = '';
+        if (splits.length === 0) return;
+
+        const table = document.createElement('table');
+        table.id = 'splitsTable';
+        const headerRow = table.insertRow();
+        const headers = ['Split #', 'Start Time', 'End Time', 'Duration', 'Customer', 'Project', 'Description'];
+        headers.forEach(headerText => {
+            const th = document.createElement('th');
+            th.textContent = headerText;
+            headerRow.appendChild(th);
+        });
+
+        splits.forEach((split, index) => {
+            const row = table.insertRow();
+            const splitNumberCell = row.insertCell();
+            splitNumberCell.textContent = index + 1;
+            const startTimeCell = row.insertCell();
+            startTimeCell.textContent = split.startTime;
+            const endTimeCell = row.insertCell();
+            endTimeCell.textContent = split.endTime;
+            const durationCell = row.insertCell();
+            durationCell.textContent = formatDuration(split.duration);
+            const customerCell = row.insertCell();
+            const customerInput = document.createElement('input');
+            customerInput.value = split.customer;
+            customerInput.classList.add('editable');
+            customerInput.addEventListener('blur', () => {
+                split.customer = customerInput.value;
+                displaySplits();
+            });
+            customerCell.appendChild(customerInput);
+            const projectCell = row.insertCell();
+            const projectInput = document.createElement('input');
+            projectInput.value = split.project;
+            projectInput.classList.add('editable');
+            projectInput.addEventListener('blur', () => {
+                split.project = projectInput.value;
+                displaySplits();
+            });
+            projectCell.appendChild(projectInput);
+            const descriptionCell = row.insertCell();
+            const descriptionInput = document.createElement('input');
+            descriptionInput.value = split.description;
+            descriptionInput.classList.add('editable');
+            descriptionInput.addEventListener('blur', () => {
+                split.description = descriptionInput.value;
+                displaySplits();
+            });
+            descriptionCell.appendChild(descriptionInput);
+        });
+
+        container.appendChild(table);
+    }
+
+    function formatDuration(duration) {
+        const totalSeconds = Math.floor(duration / 1000);
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+        return pad(hours) + ':' + pad(minutes) + ':' + pad(seconds);
+    }
+
+    document.getElementById('startStopBtn').addEventListener('click', function() {
+        if (running) {
+            pauseStopwatch();
+        } else {
+            startStopwatch();
+        }
+    });
+
+    document.getElementById('splitBtn').addEventListener('click', splitStopwatch);
+
+    document.getElementById('resetBtn').addEventListener('click', resetStopwatch);
+
+    // Start the stopwatch immediately upon loading the page
+    animateStopwatch();
+</script>
+
+</body>
+</html>
