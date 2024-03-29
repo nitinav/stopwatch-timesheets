@@ -38,7 +38,7 @@
 
     <script>
         // Empty data row
-        let empty_data_row = {'startTime':'','endTime':'','duration':'','customer':'','project':'','description':''};
+        let empty_data_row = {'startTime':'','endTime':'','customer':'','project':'','description':''};
 
         // Retrieve data from local storage
         let data = JSON.parse(localStorage.getItem('allTimeSplits')) || [];
@@ -50,10 +50,11 @@
 
             data.forEach((item, index) => {
                 const row = document.createElement('tr');
+                let duration = new Date(item.endTime) - new Date(item.startTime);
                 row.innerHTML = `
                     <td contenteditable="true">${item.startTime}</td>
                     <td contenteditable="true">${item.endTime}</td>
-                    <td contenteditable="true">${formatDuration(item.duration)}</td>
+                    <td contenteditable="true">${formatDuration(duration)}</td>
                     <td contenteditable="true">${item.customer}</td>
                     <td contenteditable="true">${item.project}</td>
                     <td contenteditable="true">${item.description}</td>
@@ -111,11 +112,10 @@
             tableRows.forEach(row => {
                 const startTime = row.cells[0].textContent;
                 const endTime = row.cells[1].textContent;
-                const duration = row.cells[2].textContent;
                 const customer = row.cells[3].textContent;
                 const project = row.cells[4].textContent;
                 const description = row.cells[5].textContent;
-                data.push({ startTime, endTime, duration, description, customer, project });
+                data.push({ startTime, endTime, description, customer, project });
             });
 
             localStorage.setItem('allTimeSplits', JSON.stringify(data));

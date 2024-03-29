@@ -97,7 +97,6 @@
             const split = {
                 startTime: new Date(lastStartTimestamp).toLocaleString(),
                 endTime: new Date(endTime).toLocaleString(),
-                duration: splitTime,
                 description: '',
                 customer: '',
                 project: ''
@@ -160,7 +159,7 @@
             const endTimeCell = row.insertCell();
             endTimeCell.textContent = split.endTime;
             const durationCell = row.insertCell();
-            durationCell.textContent = formatDuration(split.duration);
+            durationCell.textContent = formatDuration(new Date(split.endTime) - new Date(split.startTime));
             const customerCell = row.insertCell();
             const customerInput = document.createElement('input');
             customerInput.value = split.customer;
