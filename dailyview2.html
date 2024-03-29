@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Summary</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+        ul {
+            padding-left: 20px;
+        }
+    </style>
+</head>
+<body>
+    <script>
+        // Retrieve data from local storage
+        const allTimeSplits = JSON.parse(localStorage.getItem('allTimeSplits')) || [];
+
+        // Function to convert milliseconds to hours with two decimal points
+        function millisecondsToHours(milliseconds) {
+            // Convert milliseconds to hours
+            const hours = milliseconds / 3600000;
+            // Round to two decimal points and return as a string
+            return hours.toFixed(2);
+        }
+
+        // Function to calculate the total duration in milliseconds
+        function calculateTotalDuration(startTime, endTime) {
+            const start = new Date(startTime);
+            const end = new Date(endTime);
+            return end - start;
+            //return millisecondsToHours(end - start);
+        }
+
+        // Function to generate daily summary
+        function generateDailySummary() {
+            const summary = {};
+
+            allTimeSplits.forEach(split => {
+                const startDate = new Date(split.startTime).toLocaleDateString();
+                const customer = split.customer || 'Unknown';
+                const project = split.project || 'Unknown';
+                const duration = calculateTotalDuration(split.startTime, split.endTime);
+                const description = split.description || '';
+
+                const key = `${startDate}-${customer}-${project}`;
+                if (!summary[key]) {
+                    summary[key] = {
+                        date: startDate,
+                        customer: customer,
+                        project: project,
+                        totalDuration: duration,
+                        descriptions: [description]
+                    };
+                } else {
+                    summary[key].totalDuration += duration;
+                    summary[key].descriptions.push(description);
+                }
+            });
+
+            return Object.values(summary);
+        }
+
+        // Function to display daily summary in tables grouped by date
+        function displaySummaryTables(summary) {
+            // Group summary by date
+            const summaryByDate = {};
+            summary.forEach(item => {
+                if (!summaryByDate[item.date]) {
+                    summaryByDate[item.date] = [];
+                }
+                summaryByDate[item.date].push(item);
+            });
+
+            // Create and display table for each date
+            for (const date in summaryByDate) {
+                if (summaryByDate.hasOwnProperty(date)) {
+                    const table = createTable(summaryByDate[date]);
+                    // Create a new heading element
+                    const heading = document.createElement('h3');
+                    heading.textContent = date;
+
+                    // Insert the heading into the body of the document
+                    document.body.appendChild(heading);
+                    document.body.appendChild(table);
+                }
+            }
+        }
+
+        // Function to create a table for a given summary
+        function createTable(summary) {
+            const table = document.createElement('table');
+            table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Customer</th>
+                        <th>Project</th>
+                        <th>Total Duration (h)</th>
+                        <th>Descriptions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            `;
+
+            const tbody = table.querySelector('tbody');
+            summary.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.date}</td>
+                    <td>${item.customer}</td>
+                    <td>${item.project}</td>
+                    <td>${item.totalDuration}</td>
+                    <td>${item.descriptions.length > 0 ? `<ul>${item.descriptions.map(desc => `<li>${desc}</li>`).join('')}</ul>` : ''}</td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            return table;
+        }
+
+        // Generate daily summary
+        const dailySummary = generateDailySummary();
+
+        // Display summary in tables grouped by date
+        displaySummaryTables(dailySummary);
+    </script>
+</body>
+</html>
