@@ -164,7 +164,7 @@
             const customerCell = row.insertCell();
             const customerInput = document.createElement('input');
             customerInput.value = split.customer;
-            customerInput.classList.add('editable');
+            customerInput.setAttribute("contenteditable", "true");
             customerInput.addEventListener('blur', () => {
                 split.customer = customerInput.value;
                 displaySplits();
@@ -173,7 +173,7 @@
             const projectCell = row.insertCell();
             const projectInput = document.createElement('input');
             projectInput.value = split.project;
-            projectInput.classList.add('editable');
+            projectInput.setAttribute("contenteditable", "true");
             projectInput.addEventListener('blur', () => {
                 split.project = projectInput.value;
                 displaySplits();
@@ -182,7 +182,7 @@
             const descriptionCell = row.insertCell();
             const descriptionInput = document.createElement('input');
             descriptionInput.value = split.description;
-            descriptionInput.classList.add('editable');
+            descriptionInput.setAttribute("contenteditable", "true");
             descriptionInput.addEventListener('blur', () => {
                 split.description = descriptionInput.value;
                 displaySplits();
