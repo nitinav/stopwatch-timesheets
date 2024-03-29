@@ -34,6 +34,8 @@
         <tbody></tbody>
     </table>
 
+    <script src="functions.js"></script>
+
     <script>
         // Empty data row
         let empty_data_row = {'startTime':'','endTime':'','duration':'','customer':'','project':'','description':''};
@@ -51,7 +53,7 @@
                 row.innerHTML = `
                     <td contenteditable="true">${item.startTime}</td>
                     <td contenteditable="true">${item.endTime}</td>
-                    <td contenteditable="true">${item.duration}</td>
+                    <td contenteditable="true">${formatDuration(item.duration)}</td>
                     <td contenteditable="true">${item.customer}</td>
                     <td contenteditable="true">${item.project}</td>
                     <td contenteditable="true">${item.description}</td>
