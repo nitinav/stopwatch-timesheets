@@ -52,8 +52,8 @@
                 const row = document.createElement('tr');
                 let duration = new Date(item.endTime) - new Date(item.startTime);
                 row.innerHTML = `
-                    <td contenteditable="true">${item.startTime}</td>
-                    <td contenteditable="true">${item.endTime}</td>
+                    <td contenteditable="true" onblur="renderTable()">${item.startTime}</td>
+                    <td contenteditable="true" onblur="renderTable()">${item.endTime}</td>
                     <td contenteditable="false">${formatDuration(duration)}</td>
                     <td contenteditable="true">${item.customer}</td>
                     <td contenteditable="true">${item.project}</td>
@@ -93,8 +93,8 @@
         function createRow() {
             const newRow = document.createElement('tr');
             newRow.innerHTML = `
-                <td contenteditable="true"></td>
-                <td contenteditable="true"></td>
+                <td contenteditable="true" onblur="renderTable()"></td>
+                <td contenteditable="true" onblur="renderTable()"></td>
                 <td contenteditable="false"></td>
                 <td contenteditable="true"></td>
                 <td contenteditable="true"></td>
