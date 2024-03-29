@@ -119,7 +119,7 @@
                     <td>${item.date}</td>
                     <td>${item.customer}</td>
                     <td>${item.project}</td>
-                    <td>${item.totalDuration}</td>
+                    <td>${millisecondsToHours(item.totalDuration)}</td>
                     <td>${item.descriptions.length > 0 ? `<ul>${item.descriptions.map(desc => `<li>${desc}</li>`).join('')}</ul>` : ''}</td>
                 `;
                 tbody.appendChild(row);
