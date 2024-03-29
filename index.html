@@ -56,6 +56,7 @@
     let running = false;
     let pausedTime = 0;
     let splits = [];
+    let existingSplits = JSON.parse(localStorage.getItem('allTimeSplits'));
 
     function startStopwatch() {
         if (!running) {
@@ -98,20 +99,15 @@
                 project: ''
             };
             splits.push(split);
-            updateAllTimeSplits(split);
+            persistSplits();
             displaySplits();
             startStopwatch();
         }
     }
 
-    function updateAllTimeSplits(split) {
-        allTimeSplits = JSON.parse(localStorage.getItem('allTimeSplits'));
-        if (allTimeSplits) {
-            allTimeSplits.push(split);
-        } else {
-            allTimeSplits = [split];
-        }
-        localStorage.setItem("allTimeSplits", JSON.stringify(allTimeSplits));
+    function persistSplits(){
+        localStorage.setItem("thisSessionSplits", JSON.stringify(splits));
+        localStorage.setItem("allTimeSplits", JSON.stringify(existingSplits.concat(splits)));
     }
 
     function animateStopwatch() {
@@ -168,6 +164,7 @@
             customerInput.addEventListener('blur', () => {
                 split.customer = customerInput.value;
                 displaySplits();
+                persistSplits();
             });
             customerCell.appendChild(customerInput);
             const projectCell = row.insertCell();
@@ -177,6 +174,7 @@
             projectInput.addEventListener('blur', () => {
                 split.project = projectInput.value;
                 displaySplits();
+                persistSplits();
             });
             projectCell.appendChild(projectInput);
             const descriptionCell = row.insertCell();
@@ -186,6 +184,7 @@
             descriptionInput.addEventListener('blur', () => {
                 split.description = descriptionInput.value;
                 displaySplits();
+                persistSplits();
             });
             descriptionCell.appendChild(descriptionInput);
         });
