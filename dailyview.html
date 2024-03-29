@@ -112,8 +112,11 @@
                 </tbody>
             `;
 
+            totalDurationForDate = 0;
+
             const tbody = table.querySelector('tbody');
             summary.forEach(item => {
+                totalDurationForDate += item.totalDuration;
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${item.date}</td>
@@ -124,6 +127,16 @@
                 `;
                 tbody.appendChild(row);
             });
+
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td><b>Total</b></td>
+                <td></td>
+                <td></td>
+                <td>${millisecondsToHours(totalDurationForDate)}</td>
+                <td></td>
+            `;
+            tbody.appendChild(row);
 
             return table;
         }
