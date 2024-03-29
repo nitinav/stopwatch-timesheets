@@ -48,6 +48,7 @@
 <button id="startStopBtn">Start</button>
 <button id="splitBtn">Split</button>
 <button id="resetBtn">Reset</button>
+<button id="editSplits" onclick="location.href='editSplits.html';">Edit Splits</button>
 <div id="splitsContainer"></div>
 
 <script>
@@ -80,6 +81,7 @@
         running = false;
         pausedTime = 0;
         updateStopwatch(0);
+        existingSplits = JSON.parse(localStorage.getItem('allTimeSplits'));
         document.getElementById('startStopBtn').textContent = 'Start';
         document.getElementById('splitsContainer').innerHTML = '';
         splits = [];
@@ -107,7 +109,11 @@
 
     function persistSplits(){
         localStorage.setItem("thisSessionSplits", JSON.stringify(splits));
-        localStorage.setItem("allTimeSplits", JSON.stringify(existingSplits.concat(splits)));
+        if (existingSplits) {
+            localStorage.setItem("allTimeSplits", JSON.stringify(existingSplits.concat(splits)));
+        } else {
+            localStorage.setItem("allTimeSplits", JSON.stringify(splits));
+        }
     }
 
     function animateStopwatch() {

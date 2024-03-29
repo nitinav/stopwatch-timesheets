@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Table from Local Storage</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <button id="home" onclick="location.href='index.html';">Home</button>
+    <br><br>
+    <table id="data-table">
+        <thead>
+            <tr>
+                <th>Start Time</th>
+                <th>End Time</th>
+                <th>Duration</th>
+                <th>Customer</th>
+                <th>Project</th>
+                <th>Description</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <script>
+        // Empty data row
+        let empty_data_row = {'startTime':'','endTime':'','duration':'','customer':'','project':'','description':''};
+
+        // Retrieve data from local storage
+        let data = JSON.parse(localStorage.getItem('allTimeSplits')) || [];
+
+        // Function to render the table
+        function renderTable() {
+            const tableBody = document.querySelector('#data-table tbody');
+            tableBody.innerHTML = '';
+
+            data.forEach((item, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td contenteditable="true">${item.startTime}</td>
+                    <td contenteditable="true">${item.endTime}</td>
+                    <td contenteditable="true">${item.duration}</td>
+                    <td contenteditable="true">${item.customer}</td>
+                    <td contenteditable="true">${item.project}</td>
+                    <td contenteditable="true">${item.description}</td>
+                    <td>
+                        <button onclick="insertRowAbove(${index})">Add Above</button>
+                        <button onclick="insertRowBelow(${index})">Add Below</button>
+                        <button onclick="deleteRow(${index})">Delete</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Function to add a new row above
+        function insertRowAbove(index) {
+            data.splice(index, 0, empty_data_row);
+            renderTable();
+            saveChanges();
+        }
+
+        // Function to add a new row below
+        function insertRowBelow(index) {
+            data.splice(index+1, 0, empty_data_row);
+            renderTable();
+            saveChanges();
+        }
+
+        // Function to delete a row
+        function deleteRow(index) {
+            data.splice(index, 1);
+            renderTable();
+            saveChanges();
+        }
+
+        // Function to create a new row
+        function createRow() {
+            const newRow = document.createElement('tr');
+            newRow.innerHTML = `
+                <td contenteditable="true"></td>
+                <td contenteditable="true"></td>
+                <td contenteditable="true"></td>
+                <td contenteditable="true"></td>
+                <td contenteditable="true"></td>
+                <td contenteditable="true"></td>
+                <td></td>
+            `;
+            return newRow;
+        }
+
+        // Save edited values back to local storage
+        function saveChanges() {
+            const tableRows = document.querySelectorAll('#data-table tbody tr');
+            data = [];
+
+            tableRows.forEach(row => {
+                const startTime = row.cells[0].textContent;
+                const endTime = row.cells[1].textContent;
+                const duration = row.cells[2].textContent;
+                const customer = row.cells[3].textContent;
+                const project = row.cells[4].textContent;
+                const description = row.cells[5].textContent;
+                data.push({ startTime, endTime, duration, description, customer, project });
+            });
+
+            localStorage.setItem('allTimeSplits', JSON.stringify(data));
+        }
+
+        // Event listener for table cell editing
+        document.querySelector('#data-table').addEventListener('input', saveChanges);
+
+        // Render the table initially
+        renderTable();
+    </script>
+</body>
+</html>
