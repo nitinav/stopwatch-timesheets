@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daily Summary</title>
+    <title>Weekly Summary</title>
     <style>
         table {
             border-collapse: collapse;
@@ -30,59 +30,59 @@
             const start = new Date(startTime);
             const end = new Date(endTime);
             return end - start;
-            //return millisecondsToHours(end - start);
         }
 
-        // Function to generate daily summary
-        function generateDailySummary() {
+        // Function to generate weekly summary
+        function generateWeeklySummary() {
             const summary = {};
 
             allTimeSplits.forEach(split => {
-                const startDate = new Date(split.startTime).toLocaleDateString();
+                const startDate = new Date(split.startTime);
+                const weekStart = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + 7 - startDate.getDay()); // Get the start of the week
+                const weekKey = `${weekStart.toLocaleDateString()}-${split.customer}-${split.project}`;
                 const customer = split.customer || 'Unknown';
                 const project = split.project || 'Unknown';
                 const duration = calculateTotalDuration(split.startTime, split.endTime);
                 const description = split.description || '';
 
-                const key = `${startDate}-${customer}-${project}`;
-                if (!summary[key]) {
-                    summary[key] = {
-                        date: startDate,
+                if (!summary[weekKey]) {
+                    summary[weekKey] = {
+                        weekDate: weekStart.toLocaleDateString(),
+                        date: startDate.toLocaleDateString(),
                         customer: customer,
                         project: project,
                         totalDuration: duration,
                         descriptions: [description]
                     };
                 } else {
-                    summary[key].totalDuration += duration;
-                    summary[key].descriptions.push(description);
+                    summary[weekKey].totalDuration += duration;
+                    summary[weekKey].descriptions.push(description);
                 }
             });
 
             return Object.values(summary);
         }
 
-        // Function to display daily summary in tables grouped by date
-        function displaySummaryTables(summary) {
-            // Group summary by date
-            const summaryByDate = {};
+        // Function to display weekly summary in tables grouped by week
+        function displayWeeklySummaryTables(summary) {
+            // Group summary by week
+            const summaryByWeek = {};
             summary.forEach(item => {
-                if (!summaryByDate[item.date]) {
-                    summaryByDate[item.date] = [];
+                if (!summaryByWeek[item.weekDate]) {
+                    summaryByWeek[item.weekDate] = [];
                 }
-                summaryByDate[item.date].push(item);
+                summaryByWeek[item.weekDate].push(item);
             });
 
-            // Create and display table for each date
-            for (const date in summaryByDate) {
-                if (summaryByDate.hasOwnProperty(date)) {
-                    const table = createTable(summaryByDate[date]);
+            // Create and display table for each week
+            for (const week in summaryByWeek) {
+                if (summaryByWeek.hasOwnProperty(week)) {
                     // Create a new heading element
                     const heading = document.createElement('h3');
-                    heading.textContent = date;
-
-                    // Insert the heading into the body of the document
+                    heading.textContent = "Week ending " + week;
                     document.body.appendChild(heading);
+
+                    const table = createTable(summaryByWeek[week]);
                     document.body.appendChild(table);
                 }
             }
@@ -94,7 +94,6 @@
             table.innerHTML = `
                 <thead>
                     <tr>
-                        <th>Date</th>
                         <th>Customer</th>
                         <th>Project</th>
                         <th>Total Duration (h)</th>
@@ -105,14 +104,13 @@
                 </tbody>
             `;
 
-            totalDurationForDate = 0;
+            totalDurationForWeek = 0;
 
             const tbody = table.querySelector('tbody');
             summary.forEach(item => {
-                totalDurationForDate += item.totalDuration;
+                totalDurationForWeek += item.totalDuration;
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td>${item.date}</td>
                     <td>${item.customer}</td>
                     <td>${item.project}</td>
                     <td>${millisecondsToHours(item.totalDuration)}</td>
@@ -125,8 +123,7 @@
             row.innerHTML = `
                 <td><b>Total</b></td>
                 <td></td>
-                <td></td>
-                <td>${millisecondsToHours(totalDurationForDate)}</td>
+                <td>${millisecondsToHours(totalDurationForWeek)}</td>
                 <td></td>
             `;
             tbody.appendChild(row);
@@ -134,11 +131,11 @@
             return table;
         }
 
-        // Generate daily summary
-        const dailySummary = generateDailySummary();
+        // Generate weekly summary
+        const weeklySummary = generateWeeklySummary();
 
-        // Display summary in tables grouped by date
-        displaySummaryTables(dailySummary);
+        // Display summary in tables grouped by week
+        displayWeeklySummaryTables(weeklySummary);
     </script>
 </body>
 </html>
