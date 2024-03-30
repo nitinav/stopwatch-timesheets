@@ -106,21 +106,6 @@
             saveChanges();
         }
 
-        // Function to create a new row
-        function createRow() {
-            const newRow = document.createElement('tr');
-            newRow.innerHTML = `
-                <td contenteditable="true" onblur="renderTable()"></td>
-                <td contenteditable="true" onblur="renderTable()"></td>
-                <td contenteditable="false"></td>
-                <td contenteditable="true"></td>
-                <td contenteditable="true"></td>
-                <td contenteditable="true"></td>
-                <td></td>
-            `;
-            return newRow;
-        }
-
         // Save edited values back to local storage
         function saveChanges() {
             const tableRows = document.querySelectorAll('#data-table tbody tr');
