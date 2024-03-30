@@ -59,13 +59,15 @@
         // Function to display daily summary in tables grouped by date
         function displaySummaryTables(summary) {
             // Group summary by date
-            const summaryByDate = {};
+            let summaryByDate = {};
             summary.forEach(item => {
                 if (!summaryByDate[item.date]) {
                     summaryByDate[item.date] = [];
                 }
                 summaryByDate[item.date].push(item);
             });
+
+            summaryByDate = sortObjectByDate(summaryByDate, 'desc');
 
             // Create and display table for each date
             for (const date in summaryByDate) {

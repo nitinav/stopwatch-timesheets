@@ -17,3 +17,33 @@ function millisecondsToHours(milliseconds) {
     // Round to two decimal points and return as a string
     return hours.toFixed(2);
 }
+
+function sortObjectByDate(obj, sortOrder) {
+    // Convert object to array of key-value pairs
+    const entries = Object.entries(obj);
+
+    // Sort the array based on the keys (dates)
+    entries.sort((a, b) => {
+        // Convert keys (dates) to Date objects
+        const dateA = new Date(a[0]);
+        const dateB = new Date(b[0]);
+
+        // Compare dates based on the sorting order
+        if (sortOrder === 'asc') {
+            return dateA - dateB;
+        } else if (sortOrder === 'desc') {
+            return dateB - dateA;
+        } else {
+            // Default to ascending order if sortOrder is not specified or invalid
+            return dateA - dateB;
+        }
+    });
+
+    // Convert the sorted array back to an object
+    const sortedObject = {};
+    entries.forEach(([key, value]) => {
+        sortedObject[key] = value;
+    });
+
+    return sortedObject;
+}

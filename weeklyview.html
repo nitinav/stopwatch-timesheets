@@ -61,13 +61,15 @@
         // Function to display weekly summary in tables grouped by week
         function displayWeeklySummaryTables(summary) {
             // Group summary by week
-            const summaryByWeek = {};
+            let summaryByWeek = {};
             summary.forEach(item => {
                 if (!summaryByWeek[item.weekDate]) {
                     summaryByWeek[item.weekDate] = [];
                 }
                 summaryByWeek[item.weekDate].push(item);
             });
+
+            summaryByWeek = sortObjectByDate(summaryByWeek, 'desc');
 
             // Create and display table for each week
             for (const week in summaryByWeek) {
