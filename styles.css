@@ -27,6 +27,10 @@ table th {
     background-color: #f2f2f2;
 }
 
+tr:hover {
+    background-color: #fffee0; /* Change to your desired highlight color */
+}
+
 /* Navigation bar styling */
 .navbar {
     background-color: #333;
