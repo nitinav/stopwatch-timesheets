@@ -33,8 +33,10 @@
 
             allTimeSplits.forEach(split => {
                 const startDate = new Date(split.startTime);
-                const weekStart = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + 7 - startDate.getDay()); // Get the start of the week
-                const weekKey = `${weekStart.toLocaleDateString()}-${split.customer}-${split.project}`;
+                // Get the end of the week
+                const weekFinish = new Date(startDate.getFullYear(), startDate.getMonth(), 
+                                           startDate.getDate() + 7 - getDayTreatSundayAsLast(startDate)); 
+                const weekKey = `${weekFinish.toLocaleDateString()}-${split.customer}-${split.project}`;
                 const customer = split.customer || 'Unknown';
                 const project = split.project || 'Unknown';
                 const duration = calculateTotalDuration(split.startTime, split.endTime);
@@ -42,7 +44,7 @@
 
                 if (!summary[weekKey]) {
                     summary[weekKey] = {
-                        weekDate: weekStart.toLocaleDateString(),
+                        weekDate: weekFinish.toLocaleDateString(),
                         date: startDate.toLocaleDateString(),
                         customer: customer,
                         project: project,

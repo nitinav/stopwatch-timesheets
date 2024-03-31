@@ -18,6 +18,12 @@ function millisecondsToHours(milliseconds) {
     return hours.toFixed(2);
 }
 
+// Function to get the day of the week treating Sunday as the last day
+function getDayTreatSundayAsLast(date) {
+    const day = date.getDay();
+    return day === 0 ? 7 : day; // Treat Sunday (0) as 7
+}
+
 function sortObjectByDate(obj, sortOrder) {
     // Convert object to array of key-value pairs
     const entries = Object.entries(obj);
