@@ -35,6 +35,21 @@
         <button id="resetBtn">Reset</button>
     </div>
 
+    <h3 id="splitInProgress">In Progress Split</h3>
+    <table id="inProgressSplitTable">
+        <thead>
+            <tr>
+                <th>Start Time</th>
+                <th>End Time</th>
+                <th>Duration</th>
+                <th>Customer</th>
+                <th>Project</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
     <h3 id="dateDisplay"></h3>
     <table id="todaysSplitsTable">
         <thead>
@@ -61,6 +76,7 @@
         let splits = [];
         let existingSplits = JSON.parse(localStorage.getItem('allTimeSplits'));
         let currentDate;
+        let splitInProgress = {};
 
         function startStopwatch() {
             if (!running) {
@@ -69,7 +85,27 @@
                 running = true;
                 animateStopwatch();
                 document.getElementById('startStopBtn').textContent = 'Pause';
+                splitInProgress = {
+                    startTime: new Date(lastStartTimestamp).toLocaleString(),
+                    endTime: new Date().toLocaleString(),
+                    description: '',
+                    customer: '',
+                    project: ''
+                };
+                const tableBody = document.querySelector('#inProgressSplitTable tbody');
+                tableBody.innerHTML = '';
+                insertSplitToTable(splitInProgress, 'inProgressSplitTable', actions = false);
             }
+        }
+        function updateSplitInProgress() {
+            const tableRows = document.querySelectorAll('#inProgressSplitTable tbody tr');
+            const row = tableRows[0];
+            let datePart = currentDate.toLocaleDateString() + ', ';
+            splitInProgress.startTime = new Date(datePart + row.cells[0].children[0].value).toLocaleString();
+            splitInProgress.endTime = new Date(datePart + row.cells[1].children[0].value).toLocaleString();
+            splitInProgress.customer = row.cells[3].textContent;
+            splitInProgress.project = row.cells[4].textContent;
+            splitInProgress.description = row.cells[5].textContent;
         }
 
         function pauseStopwatch() {
@@ -94,22 +130,17 @@
                 pauseStopwatch();
                 const endTime = Date.now();
                 const splitTime = endTime - lastStartTimestamp;
-                const split = {
-                    startTime: new Date(lastStartTimestamp).toLocaleString(),
-                    endTime: new Date(endTime).toLocaleString(),
-                    description: '',
-                    customer: '',
-                    project: ''
-                };
-                splits.push(split);
-                insertSplitToCurrentDateTable(split);
+                splitInProgress.endTime = new Date(endTime).toLocaleString();
+                splits.push(splitInProgress);
+                insertSplitToTable(splitInProgress, 'todaysSplitsTable', actions = true);
                 saveCurrentDateSplits();
                 startStopwatch();
             }
         }
 
-        function insertSplitToCurrentDateTable(item) {
-            const tableBody = document.querySelector('#todaysSplitsTable tbody');
+        function insertSplitToTable(item, tableId, actions = true) {
+            const tableBodyStr = '#' + tableId + ' tbody';
+            const tableBody = document.querySelector(tableBodyStr);
             const newIndex = tableBody.querySelectorAll('tr').length;
             const row = tableBody.insertRow();
             row.innerHTML = getRowInnerHtml(
@@ -118,7 +149,8 @@
                 item.endTime,
                 item.customer,
                 item.project,
-                item.description
+                item.description,
+                actions
             );
         }
 
@@ -173,21 +205,26 @@
                     item.endTime,
                     item.customer,
                     item.project,
-                    item.description
+                    item.description,
+                    true
                 );
             });
         }
 
-        function getRowInnerHtml(index, startTime, endTime, customer, project, description) {
+        function getRowInnerHtml(index, startTime, endTime, customer, project, description, actions = true) {
             let duration = new Date(endTime) - new Date(startTime);
             let startTimeString = new Date(startTime).toTimeString().slice(0, 8);
             let endTimeString = new Date(endTime).toTimeString().slice(0, 8);
-            return `<td><input type="time" value="${startTimeString}" oninput="updateDuration(${index})"></input></td>
-                    <td><input type="time" value="${endTimeString}" oninput="updateDuration(${index})"></input></td>
+            let innerHTML = `
+                    <td><input type="time" value="${startTimeString}" oninput="updateDuration(this, ${index})"></input></td>
+                    <td><input type="time" value="${endTimeString}" oninput="updateDuration(this, ${index})"></input></td>
                     <td contenteditable="false">${formatDuration(duration)}</td>
                     <td contenteditable="true">${customer}</td>
                     <td contenteditable="true">${project}</td>
                     <td contenteditable="true">${description}</td>
+                `;
+            if (actions) {
+                innerHTML += `
                     <td>
                         <select onchange="handleDropdown(this.value, ${index})">
                             <option value="">Select Action</option>
@@ -197,6 +234,8 @@
                         </select>
                     </td>
                 `;
+            }
+            return innerHTML;
         }
 
         function handleDropdown(action, index) {
@@ -206,7 +245,7 @@
                     insertRow(tableBody, index);
                     break;
                 case "insertBelow":
-                    insertRow(tableBody, index+1);
+                    insertRow(tableBody, index + 1);
                     break;
                 case "delete":
                     tableBody.deleteRow(index);
@@ -228,12 +267,15 @@
                 new Date().toLocaleString(),
                 '',
                 '',
-                ''
+                '',
+                true
             );
         }
 
-        function updateDuration(index) {
-            const tableRows = document.querySelectorAll('#todaysSplitsTable tbody tr');
+        function updateDuration(timeElement, index) {
+            tableId = timeElement.closest('table').id;
+
+            const tableRows = document.querySelectorAll(`#${tableId} tbody tr`);
             const row = tableRows[index];
             let datePart = currentDate.toLocaleDateString() + ', ';
             const startTime = new Date(datePart + row.cells[0].children[0].value);
@@ -296,6 +338,7 @@
 
         // Event listener for table cell editing
         document.querySelector('#todaysSplitsTable').addEventListener('input', saveCurrentDateSplits);
+        document.querySelector('#inProgressSplitTable').addEventListener('input', updateSplitInProgress);
 
         // Start the stopwatch immediately upon loading the page
         animateStopwatch();
