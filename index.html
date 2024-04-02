@@ -12,6 +12,7 @@
             margin: 50px auto;
             text-align: center;
         }
+
         #stopwatchButtons {
             text-align: center;
         }
@@ -33,7 +34,22 @@
         <button id="splitBtn">Split</button>
         <button id="resetBtn">Reset</button>
     </div>
-    <div id="splitsContainer"></div>
+
+    <h3 id="dateDisplay"></h3>
+    <table id="todaysSplitsTable">
+        <thead>
+            <tr>
+                <th>Start Time</th>
+                <th>End Time</th>
+                <th>Duration</th>
+                <th>Customer</th>
+                <th>Project</th>
+                <th>Description</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
 
     <script src="functions.js"></script>
 
@@ -44,6 +60,7 @@
         let pausedTime = 0;
         let splits = [];
         let existingSplits = JSON.parse(localStorage.getItem('allTimeSplits'));
+        let currentDate;
 
         function startStopwatch() {
             if (!running) {
@@ -69,7 +86,6 @@
             updateStopwatch(0);
             existingSplits = JSON.parse(localStorage.getItem('allTimeSplits'));
             document.getElementById('startStopBtn').textContent = 'Start';
-            document.getElementById('splitsContainer').innerHTML = '';
             splits = [];
         }
 
@@ -86,19 +102,24 @@
                     project: ''
                 };
                 splits.push(split);
-                persistSplits();
-                displaySplits();
+                insertSplitToCurrentDateTable(split);
+                saveCurrentDateSplits();
                 startStopwatch();
             }
         }
 
-        function persistSplits() {
-            localStorage.setItem("thisSessionSplits", JSON.stringify(splits));
-            if (existingSplits) {
-                localStorage.setItem("allTimeSplits", JSON.stringify(existingSplits.concat(splits)));
-            } else {
-                localStorage.setItem("allTimeSplits", JSON.stringify(splits));
-            }
+        function insertSplitToCurrentDateTable(item) {
+            const tableBody = document.querySelector('#todaysSplitsTable tbody');
+            const newIndex = tableBody.querySelectorAll('tr').length;
+            const row = tableBody.insertRow();
+            row.innerHTML = getRowInnerHtml(
+                newIndex,
+                item.startTime,
+                item.endTime,
+                item.customer,
+                item.project,
+                item.description
+            );
         }
 
         function animateStopwatch() {
@@ -119,66 +140,150 @@
             document.getElementById('stopwatch').textContent = formattedTime;
         }
 
-        function displaySplits() {
-            const container = document.getElementById('splitsContainer');
-            container.innerHTML = '';
-            if (splits.length === 0) return;
+        function displayCurrentDateSplits() {
+            // Get the table object from DOM and reset it to empty
+            const todaysSplitsTable = document.querySelector('#todaysSplitsTable');
+            const tableBody = document.querySelector('#todaysSplitsTable tbody');
+            tableBody.innerHTML = '';
 
-            const table = document.createElement('table');
-            table.id = 'splitsTable';
-            const headerRow = table.insertRow();
-            const headers = ['Split #', 'Start Time', 'End Time', 'Duration', 'Customer', 'Project', 'Description'];
-            headers.forEach(headerText => {
-                const th = document.createElement('th');
-                th.textContent = headerText;
-                headerRow.appendChild(th);
+            // Retrieve data from local storage
+            let allTimeSplits = JSON.parse(localStorage.getItem('allTimeSplits')) || [];
+
+            // Set the current date
+            currentDate = new Date();
+            let currentDateString = currentDate.toLocaleDateString();
+
+            // Filter data for the current date
+            let todaysData = allTimeSplits.filter(split => {
+                const startTime = new Date(split.startTime);
+                return startTime.toLocaleDateString() === currentDateString;
             });
 
-            splits.forEach((split, index) => {
-                const row = table.insertRow();
-                const splitNumberCell = row.insertCell();
-                splitNumberCell.textContent = index + 1;
-                const startTimeCell = row.insertCell();
-                startTimeCell.textContent = split.startTime;
-                const endTimeCell = row.insertCell();
-                endTimeCell.textContent = split.endTime;
-                const durationCell = row.insertCell();
-                durationCell.textContent = formatDuration(new Date(split.endTime) - new Date(split.startTime));
-                const customerCell = row.insertCell();
-                const customerInput = document.createElement('input');
-                customerInput.value = split.customer;
-                customerInput.setAttribute("contenteditable", "true");
-                customerInput.addEventListener('blur', () => {
-                    split.customer = customerInput.value;
-                    displaySplits();
-                    persistSplits();
-                });
-                customerCell.appendChild(customerInput);
-                const projectCell = row.insertCell();
-                const projectInput = document.createElement('input');
-                projectInput.value = split.project;
-                projectInput.setAttribute("contenteditable", "true");
-                projectInput.addEventListener('blur', () => {
-                    split.project = projectInput.value;
-                    displaySplits();
-                    persistSplits();
-                });
-                projectCell.appendChild(projectInput);
-                const descriptionCell = row.insertCell();
-                const descriptionInput = document.createElement('input');
-                descriptionInput.value = split.description;
-                descriptionInput.setAttribute("contenteditable", "true");
-                descriptionInput.addEventListener('blur', () => {
-                    split.description = descriptionInput.value;
-                    displaySplits();
-                    persistSplits();
-                });
-                descriptionCell.appendChild(descriptionInput);
-            });
+            // Display the date at the top of the table
+            document.getElementById('dateDisplay').textContent = `Splits for ${currentDateString}`;
 
-            container.appendChild(table);
+            // If no data to display, return
+            if (todaysData.length === 0) return;
+
+            todaysData.forEach((item, index) => {
+                const row = tableBody.insertRow();
+                row.innerHTML = getRowInnerHtml(
+                    index,
+                    item.startTime,
+                    item.endTime,
+                    item.customer,
+                    item.project,
+                    item.description
+                );
+            });
         }
 
+        function getRowInnerHtml(index, startTime, endTime, customer, project, description) {
+            let duration = new Date(endTime) - new Date(startTime);
+            let startTimeString = new Date(startTime).toTimeString().slice(0, 8);
+            let endTimeString = new Date(endTime).toTimeString().slice(0, 8);
+            return `<td><input type="time" value="${startTimeString}" oninput="updateDuration(${index})"></input></td>
+                    <td><input type="time" value="${endTimeString}" oninput="updateDuration(${index})"></input></td>
+                    <td contenteditable="false">${formatDuration(duration)}</td>
+                    <td contenteditable="true">${customer}</td>
+                    <td contenteditable="true">${project}</td>
+                    <td contenteditable="true">${description}</td>
+                    <td>
+                        <select onchange="handleDropdown(this.value, ${index})">
+                            <option value="">Select Action</option>
+                            <option value="insertAbove">Insert Row Above</option>
+                            <option value="insertBelow">Insert Row Below</option>
+                            <option value="delete">Delete Row</option>
+                        </select>
+                    </td>
+                `;
+        }
+
+        function handleDropdown(action, index) {
+            const tableBody = document.querySelector('#todaysSplitsTable tbody');
+            switch (action) {
+                case "insertAbove":
+                    insertRow(tableBody, index);
+                    break;
+                case "insertBelow":
+                    insertRow(tableBody, index+1);
+                    break;
+                case "delete":
+                    tableBody.deleteRow(index);
+                    break;
+                default:
+                    // Do nothing or handle default case
+                    break;
+            }
+            saveCurrentDateSplits();
+            displayCurrentDateSplits();
+        }
+
+        // Function to add a new row at given index
+        function insertRow(tableBody, index) {
+            const row = tableBody.insertRow(index);
+            row.innerHTML = getRowInnerHtml(
+                index,
+                new Date().toLocaleString(),
+                new Date().toLocaleString(),
+                '',
+                '',
+                ''
+            );
+        }
+
+        function updateDuration(index) {
+            const tableRows = document.querySelectorAll('#todaysSplitsTable tbody tr');
+            const row = tableRows[index];
+            let datePart = currentDate.toLocaleDateString() + ', ';
+            const startTime = new Date(datePart + row.cells[0].children[0].value);
+            const endTime = new Date(datePart + row.cells[1].children[0].value);
+
+            const duration = endTime - startTime;
+            row.cells[2].textContent = formatDuration(duration);
+        }
+
+        function saveCurrentDateSplits() {
+            const tableRows = document.querySelectorAll('#todaysSplitsTable tbody tr');
+            let currentDateSplits = [];
+
+            tableRows.forEach(row => {
+                let datePart = currentDate.toLocaleDateString() + ', ';
+                const startTime = new Date(datePart + row.cells[0].children[0].value).toLocaleString();
+                const endTime = new Date(datePart + row.cells[1].children[0].value).toLocaleString();
+                const customer = row.cells[3].textContent;
+                const project = row.cells[4].textContent;
+                const description = row.cells[5].textContent;
+                currentDateSplits.push({ startTime, endTime, description, customer, project });
+            });
+
+            replaceRecordsForDate(currentDate, currentDateSplits);
+        }
+
+        function replaceRecordsForDate(dateToReplace, newArray) {
+            // Retrieve data from local storage
+            let allTimeSplits = JSON.parse(localStorage.getItem('allTimeSplits')) || [];
+
+            // Filter records based on the given date
+            const filteredRecords = allTimeSplits.filter(record => {
+                const startTime = new Date(record.startTime);
+                return startTime.toDateString() === dateToReplace.toDateString();
+            });
+
+            // Remove filtered records from the original array
+            allTimeSplits = allTimeSplits.filter(record => !filteredRecords.includes(record));
+
+            // Concatenate the new array with the remaining records
+            allTimeSplits = allTimeSplits.concat(newArray);
+
+            // Update local storage with the modified array
+            localStorage.setItem('allTimeSplits', JSON.stringify(allTimeSplits));
+
+            // Optionally, return the updated array
+            return allTimeSplits;
+        }
+
+        // Event listeners for stopwatch buttons
         document.getElementById('startStopBtn').addEventListener('click', function () {
             if (running) {
                 pauseStopwatch();
@@ -186,13 +291,17 @@
                 startStopwatch();
             }
         });
-
         document.getElementById('splitBtn').addEventListener('click', splitStopwatch);
-
         document.getElementById('resetBtn').addEventListener('click', resetStopwatch);
+
+        // Event listener for table cell editing
+        document.querySelector('#todaysSplitsTable').addEventListener('input', saveCurrentDateSplits);
 
         // Start the stopwatch immediately upon loading the page
         animateStopwatch();
+
+        // Display today's splits immediately also
+        displayCurrentDateSplits();
     </script>
 
 </body>

@@ -31,6 +31,10 @@ tr:hover {
     background-color: #fffee0; /* Change to your desired highlight color */
 }
 
+input[type="time"] {
+    width: 100%; /* Adjust the width as needed */
+}
+
 /* Navigation bar styling */
 .navbar {
     background-color: #333;
