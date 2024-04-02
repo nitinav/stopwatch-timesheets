@@ -159,6 +159,20 @@
                 requestAnimationFrame(animateStopwatch);
                 const elapsedTime = performance.now() - startTime;
                 updateStopwatch(elapsedTime);
+                updateInProgressSplit();
+            }
+        }
+
+        function updateInProgressSplit() {
+            const tableRows = document.querySelectorAll('#inProgressSplitTable tbody tr');
+            if (tableRows) {
+                const index = 0;
+                const row = tableRows[index];
+                if (row) {
+                    const timeElement = row.cells[1].children[0];
+                    timeElement.value = new Date().toTimeString().slice(0, 8);
+                    updateDuration(timeElement, index);
+                }
             }
         }
 
