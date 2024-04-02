@@ -134,6 +134,7 @@
                 splits.push(splitInProgress);
                 insertSplitToTable(splitInProgress, 'todaysSplitsTable', actions = true);
                 saveCurrentDateSplits();
+                updateTotalDurationText();
                 startStopwatch();
             }
         }
@@ -152,6 +153,23 @@
                 item.description,
                 actions
             );
+        }
+
+        function updateTotalDurationText() {
+            const todaysRows = document.querySelectorAll('#todaysSplitsTable tbody tr');
+            let currentDateTotalDuration = 0;
+            let datePart = currentDate.toLocaleDateString() + ', ';
+
+            todaysRows.forEach((row, index) => {
+                const startTime = new Date(datePart + row.cells[0].children[0].value);
+                const endTime = new Date(datePart + row.cells[1].children[0].value);
+                currentDateTotalDuration += endTime - startTime;
+            });
+
+            // Display the date at the top of the table
+            document.getElementById('dateDisplay').textContent = `
+                Splits for ${currentDate.toLocaleDateString()} --
+                Total Duration: ${formatDuration(currentDateTotalDuration)}`;
         }
 
         function animateStopwatch() {
@@ -197,16 +215,12 @@
 
             // Set the current date
             currentDate = new Date();
-            let currentDateString = currentDate.toLocaleDateString();
 
             // Filter data for the current date
             let todaysData = allTimeSplits.filter(split => {
                 const startTime = new Date(split.startTime);
-                return startTime.toLocaleDateString() === currentDateString;
+                return startTime.toLocaleDateString() === currentDate.toLocaleDateString();
             });
-
-            // Display the date at the top of the table
-            document.getElementById('dateDisplay').textContent = `Splits for ${currentDateString}`;
 
             // If no data to display, return
             if (todaysData.length === 0) return;
@@ -223,6 +237,8 @@
                     true
                 );
             });
+
+            updateTotalDurationText();
         }
 
         function getRowInnerHtml(index, startTime, endTime, customer, project, description, actions = true) {
