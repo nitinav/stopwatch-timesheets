@@ -264,6 +264,11 @@
         }
 
         function showAutocomplete(event, element) {
+            const autocompleteList = document.getElementById('autocomplete-list');
+            if (event.key === 'Escape' || event.keyCode === 27) {
+                autocompleteList.hidden = true;
+                return;
+            }
             elementIndex = element.cellIndex;
             if (elementIndex === 3) {
                 // customer cell
@@ -274,7 +279,6 @@
                 options = getUniqueValues('project', { customer: customer })
             }
             const input = element.textContent.trim().toLowerCase();
-            const autocompleteList = document.getElementById('autocomplete-list');
             autocompleteList.innerHTML = '';
 
             const filteredOptions = options.filter(option => option.toLowerCase().includes(input));
