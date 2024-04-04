@@ -59,3 +59,24 @@ input[type="time"] {
 .active {
     background-color: #555;
 }
+
+#autocomplete-list {
+    border: 1px solid #ccc;
+    border-top: none;
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    position: absolute;
+    z-index: 100;
+    background-color: #fff;
+    width: 100%;
+}
+
+#autocomplete-list li {
+    padding: 8px 12px;
+    cursor: pointer;
+}
+
+#autocomplete-list li:hover {
+    background-color: #f1f1f1;
+}

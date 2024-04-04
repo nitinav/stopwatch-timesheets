@@ -50,6 +50,8 @@
         <tbody></tbody>
     </table>
 
+    <ul id="autocomplete-list" hidden></ul>
+
     <h3 id="dateDisplay"></h3>
     <table id="todaysSplitsTable">
         <thead>
@@ -94,7 +96,7 @@
                 };
                 const tableBody = document.querySelector('#inProgressSplitTable tbody');
                 tableBody.innerHTML = '';
-                insertSplitToTable(splitInProgress, 'inProgressSplitTable', actions = false);
+                insertSplitToTable(splitInProgress, 'inProgressSplitTable', currentDayTable = false);
             }
         }
         function updateSplitInProgress() {
@@ -132,14 +134,14 @@
                 const splitTime = endTime - lastStartTimestamp;
                 splitInProgress.endTime = new Date(endTime).toLocaleString();
                 splits.push(splitInProgress);
-                insertSplitToTable(splitInProgress, 'todaysSplitsTable', actions = true);
+                insertSplitToTable(splitInProgress, 'todaysSplitsTable', currentDayTable = true);
                 saveCurrentDateSplits();
                 updateTotalDurationText();
                 startStopwatch();
             }
         }
 
-        function insertSplitToTable(item, tableId, actions = true) {
+        function insertSplitToTable(item, tableId, currentDayTable = true) {
             const tableBodyStr = '#' + tableId + ' tbody';
             const tableBody = document.querySelector(tableBodyStr);
             const newIndex = tableBody.querySelectorAll('tr').length;
@@ -151,7 +153,7 @@
                 item.customer,
                 item.project,
                 item.description,
-                actions
+                currentDayTable
             );
         }
 
@@ -241,7 +243,63 @@
             updateTotalDurationText();
         }
 
-        function getRowInnerHtml(index, startTime, endTime, customer, project, description, actions = true) {
+        function getUniqueValues(key, filterDict = {}) {
+            // Retrieve data from localStorage
+            const localStorageData = JSON.parse(localStorage.getItem('allTimeSplits')) || [];
+
+            // Apply optional filtering based on filterDict
+            const filteredData = localStorageData.filter(item => {
+                for (const [key, value] of Object.entries(filterDict)) {
+                    if (item[key] !== value) {
+                        return false;
+                    }
+                }
+                return true;
+            });
+
+            // Extract unique values for key
+            const uniqueValues = [...new Set(filteredData.map(item => item[key]))];
+
+            return uniqueValues;
+        }
+
+        function showAutocomplete(event, element) {
+            elementIndex = element.cellIndex;
+            if (elementIndex === 3) {
+                // customer cell
+                options = getUniqueValues('customer');
+            } else if (elementIndex === 4) {
+                // project cell
+                let customer = element.previousElementSibling.textContent;
+                options = getUniqueValues('project', { customer: customer })
+            }
+            const input = element.textContent.trim().toLowerCase();
+            const autocompleteList = document.getElementById('autocomplete-list');
+            autocompleteList.innerHTML = '';
+
+            const filteredOptions = options.filter(option => option.toLowerCase().includes(input));
+            filteredOptions.forEach(option => {
+                const listItem = document.createElement('li');
+                listItem.textContent = option;
+                listItem.onclick = () => {
+                    element.textContent = option;
+                    autocompleteList.hidden = true;
+                    element.focus();
+                };
+                autocompleteList.appendChild(listItem);
+            });
+
+            if (filteredOptions.length > 0) {
+                autocompleteList.hidden = false;
+            } else {
+                autocompleteList.hidden = true;
+            }
+        }
+
+        function getRowInnerHtml(index, startTime, endTime, customer, project, description, currentDayTable = true) {
+            // currentDayTable tells us whether the row is being requested
+            // for the table that lists all the splits of the current day
+            // or the one that lists only the in progress split
             let duration = new Date(endTime) - new Date(startTime);
             let startTimeString = new Date(startTime).toTimeString().slice(0, 8);
             let endTimeString = new Date(endTime).toTimeString().slice(0, 8);
@@ -249,11 +307,20 @@
                     <td><input type="time" value="${startTimeString}" oninput="updateDuration(this, ${index})"></input></td>
                     <td><input type="time" value="${endTimeString}" oninput="updateDuration(this, ${index})"></input></td>
                     <td contenteditable="false">${formatDuration(duration)}</td>
+                    `;
+            if (currentDayTable) {
+                innerHTML += `
                     <td contenteditable="true">${customer}</td>
                     <td contenteditable="true">${project}</td>
-                    <td contenteditable="true">${description}</td>
                 `;
-            if (actions) {
+            } else {
+                innerHTML += `
+                    <td contenteditable="true" onkeyup="showAutocomplete(event, this)" onclick="showAutocomplete(event, this)">${customer}</td>
+                    <td contenteditable="true" onkeyup="showAutocomplete(event, this)" onclick="showAutocomplete(event, this)">${project}</td>
+                `;
+            }
+            innerHTML += `<td contenteditable="true">${description}</td>`;
+            if (currentDayTable) {
                 innerHTML += `
                     <td>
                         <select onchange="handleDropdown(this.value, ${index})">
@@ -264,7 +331,10 @@
                         </select>
                     </td>
                 `;
+            } else {
+
             }
+
             return innerHTML;
         }
 
