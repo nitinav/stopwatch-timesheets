@@ -179,11 +179,11 @@
                 requestAnimationFrame(animateStopwatch);
                 const elapsedTime = performance.now() - startTime;
                 updateStopwatch(elapsedTime);
-                updateInProgressSplit();
+                updateInProgressEndTime();
             }
         }
 
-        function updateInProgressSplit() {
+        function updateInProgressEndTime() {
             const tableRows = document.querySelectorAll('#inProgressSplitTable tbody tr');
             if (tableRows) {
                 const index = 0;
