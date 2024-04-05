@@ -7,12 +7,6 @@
     <title>Stopwatch</title>
     <link rel="stylesheet" href="styles.css">
     <style>
-        #stopwatch {
-            font-size: 2rem;
-            margin: 50px auto;
-            text-align: center;
-        }
-
         #stopwatchButtons {
             text-align: center;
         }
@@ -28,7 +22,6 @@
         <a href="weekly.html">Weekly Summaries</a>
     </div>
 
-    <div id="stopwatch">00:00:00</div>
     <div id="stopwatchButtons">
         <button id="startStopBtn">Start</button>
         <button id="splitBtn">Split</button>
@@ -121,7 +114,6 @@
         function resetStopwatch() {
             running = false;
             pausedTime = 0;
-            updateStopwatch(0);
             existingSplits = JSON.parse(localStorage.getItem('allTimeSplits'));
             document.getElementById('startStopBtn').textContent = 'Start';
             splits = [];
@@ -178,7 +170,6 @@
             if (running) {
                 requestAnimationFrame(animateStopwatch);
                 const elapsedTime = performance.now() - startTime;
-                updateStopwatch(elapsedTime);
                 updateInProgressEndTime();
             }
         }
@@ -194,16 +185,6 @@
                     updateDuration(timeElement, index);
                 }
             }
-        }
-
-        function updateStopwatch(elapsedTime) {
-            const totalSeconds = Math.floor(elapsedTime / 1000);
-            const hours = Math.floor(totalSeconds / 3600);
-            const minutes = Math.floor((totalSeconds % 3600) / 60);
-            const seconds = totalSeconds % 60;
-
-            const formattedTime = pad(hours) + ':' + pad(minutes) + ':' + pad(seconds);
-            document.getElementById('stopwatch').textContent = formattedTime;
         }
 
         function displayCurrentDateSplits() {
