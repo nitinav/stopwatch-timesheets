@@ -23,8 +23,7 @@
     </div>
 
     <div id="stopwatchButtons">
-        <button id="startStopBtn">Start</button>
-        <button id="splitBtn">Split</button>
+        <button id="startSplitBtn">Start</button>
     </div>
 
     <h3 id="splitInProgress">In Progress Split</h3>
@@ -78,7 +77,7 @@
                 lastStartTimestamp = Date.now();
                 running = true;
                 animateStopwatch();
-                document.getElementById('startStopBtn').textContent = 'Pause';
+                document.getElementById('startSplitBtn').textContent = 'Split';
                 splitInProgress = {
                     startTime: new Date(lastStartTimestamp).toLocaleString(),
                     endTime: new Date().toLocaleString(),
@@ -106,7 +105,7 @@
             if (running) {
                 running = false;
                 pausedTime = performance.now() - startTime;
-                document.getElementById('startStopBtn').textContent = 'Start';
+                document.getElementById('startSplitBtn').textContent = 'Start';
             }
         }
 
@@ -403,14 +402,13 @@
         }
 
         // Event listeners for stopwatch buttons
-        document.getElementById('startStopBtn').addEventListener('click', function () {
+        document.getElementById('startSplitBtn').addEventListener('click', function () {
             if (running) {
-                pauseStopwatch();
+                splitStopwatch();
             } else {
                 startStopwatch();
             }
         });
-        document.getElementById('splitBtn').addEventListener('click', splitStopwatch);
 
         // Event listener for table cell editing
         document.querySelector('#todaysSplitsTable').addEventListener('input', saveCurrentDateSplits);
