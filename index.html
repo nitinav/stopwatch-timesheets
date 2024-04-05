@@ -25,7 +25,6 @@
     <div id="stopwatchButtons">
         <button id="startStopBtn">Start</button>
         <button id="splitBtn">Split</button>
-        <button id="resetBtn">Reset</button>
     </div>
 
     <h3 id="splitInProgress">In Progress Split</h3>
@@ -109,14 +108,6 @@
                 pausedTime = performance.now() - startTime;
                 document.getElementById('startStopBtn').textContent = 'Start';
             }
-        }
-
-        function resetStopwatch() {
-            running = false;
-            pausedTime = 0;
-            existingSplits = JSON.parse(localStorage.getItem('allTimeSplits'));
-            document.getElementById('startStopBtn').textContent = 'Start';
-            splits = [];
         }
 
         function splitStopwatch() {
@@ -420,7 +411,6 @@
             }
         });
         document.getElementById('splitBtn').addEventListener('click', splitStopwatch);
-        document.getElementById('resetBtn').addEventListener('click', resetStopwatch);
 
         // Event listener for table cell editing
         document.querySelector('#todaysSplitsTable').addEventListener('input', saveCurrentDateSplits);
