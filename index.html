@@ -8,7 +8,8 @@
     <link rel="stylesheet" href="styles.css">
     <style>
         #stopwatchButtons {
-            text-align: center;
+            text-align: right;
+            width: 50%;
         }
     </style>
 </head>
@@ -22,8 +23,21 @@
         <a href="weekly.html">Weekly Summaries</a>
     </div>
 
-    <div id="stopwatchButtons">
-        <button id="startSplitBtn">Start</button>
+    <div class="top-container">
+        <div class="ignored-table-container">
+            <table id="ignoredCustomers">
+                <thead>
+                    <tr>
+                        <th>Top 3 Customers with Least Time Logged</th>
+                        <th>3 Customers with Zero Time Logged</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+        <div class="start-split-button-container">
+            <button id="startSplitBtn">Start</button>
+        </div>
     </div>
 
     <h3 id="splitInProgress">In Progress Split</h3>
@@ -119,6 +133,7 @@
                 insertSplitToTable(splitInProgress, 'todaysSplitsTable', currentDayTable = true);
                 saveCurrentDateSplits();
                 updateTotalDurationText();
+                displayIgnoredCustomers();
                 startStopwatch();
             }
         }
@@ -332,6 +347,7 @@
             }
             saveCurrentDateSplits();
             displayCurrentDateSplits();
+            displayIgnoredCustomers();
         }
 
         // Function to add a new row at given index
@@ -376,6 +392,8 @@
             });
 
             replaceRecordsForDate(currentDate, currentDateSplits);
+            displayIgnoredCustomers();
+            updateTotalDurationText();  
         }
 
         function replaceRecordsForDate(dateToReplace, newArray) {
@@ -401,6 +419,17 @@
             return allTimeSplits;
         }
 
+        function displayIgnoredCustomers() {
+            let ignoredCustomers = displayCustomersWithLeastTime();
+            const tableBody = document.querySelector('#ignoredCustomers tbody');
+            tableBody.innerHTML = '';   
+            const row = tableBody.insertRow();
+            row.innerHTML = `
+                <td>${ignoredCustomers['leastTimeCustomers'].slice(0, 3).join('<br>')}</td>
+                <td>${ignoredCustomers['zeroTimeCustomers'].slice(0, 3).join('<br>')}</td>
+            `;
+        }
+
         // Event listeners for stopwatch buttons
         document.getElementById('startSplitBtn').addEventListener('click', function () {
             if (running) {
@@ -414,8 +443,9 @@
         document.querySelector('#todaysSplitsTable').addEventListener('input', saveCurrentDateSplits);
         document.querySelector('#inProgressSplitTable').addEventListener('input', updateSplitInProgress);
 
-        // Display today's splits immediately
+        // Display content on page load
         displayCurrentDateSplits();
+        displayIgnoredCustomers();
     </script>
 
 </body>

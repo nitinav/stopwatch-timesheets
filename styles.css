@@ -80,3 +80,17 @@ input[type="time"] {
 #autocomplete-list li:hover {
     background-color: #f1f1f1;
 }
+
+.top-container {
+    display: flex;
+    justify-content: space-between; /* Items will be spaced evenly */
+}
+
+.ignored-table-container {
+    width: 50%; /* Set the width to half of the container */
+}
+
+.start-split-button-container {
+    width: 50%; /* Set the width to half of the container */
+    text-align: center; /* Align the button to the right */
+}
