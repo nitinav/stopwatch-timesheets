@@ -110,3 +110,14 @@ function displayCustomersWithLeastTime() {
         'zeroTimeCustomers': zeroTimeCustomers
     };
 }
+
+// Function to allow the user to download allTimeSplits in localstorage as a JSON file
+function downloadAllTimeSplits() {
+    const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(localStorage.getItem('allTimeSplits'));
+    const downloadAnchorNode = document.createElement('a');
+    downloadAnchorNode.setAttribute('href', dataStr);
+    downloadAnchorNode.setAttribute('download', 'allTimeSplits.json');
+    document.body.appendChild(downloadAnchorNode); // required for firefox
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
+}
