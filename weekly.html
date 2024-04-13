@@ -95,7 +95,7 @@
                     <tr>
                         <th>Customer</th>
                         <th>Project</th>
-                        <th>Total Duration (h)</th>
+                        <th>Total Duration</th>
                         <th>Descriptions</th>
                     </tr>
                 </thead>
@@ -118,14 +118,8 @@
                 tbody.appendChild(row);
             });
 
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td><b>Total</b></td>
-                <td></td>
-                <td><b>${millisecondsToHours(totalDurationForWeek)}</b></td>
-                <td></td>
-            `;
-            tbody.appendChild(row);
+            // insert the totalDurationForWeek into the 3rd cell of the header row; convert the totalDurationForWeek to hours
+            table.querySelector('thead tr th:nth-child(3)').innerHTML = `Total Duration<br> ${millisecondsToHours(totalDurationForWeek)} hours`;
 
             return table;
         }
