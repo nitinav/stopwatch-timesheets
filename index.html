@@ -37,6 +37,7 @@
         </div>
         <div class="start-split-button-container">
             <button id="startSplitBtn">Start</button>
+            <button id="resetStartTimeBtn">Reset Start Time</button>
         </div>
     </div>
 
@@ -437,6 +438,14 @@
             } else {
                 startStopwatch();
             }
+        });
+
+        // event listener for reset start time button
+        // set start time to current time
+        document.getElementById('resetStartTimeBtn').addEventListener('click', function () {
+            const tableRows = document.querySelectorAll('#inProgressSplitTable tbody tr');
+            const row = tableRows[0];
+            row.cells[0].children[0].value = new Date().toTimeString().slice(0, 8);
         });
 
         // Event listener for table cell editing
