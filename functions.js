@@ -80,29 +80,23 @@ function displayCustomersWithLeastTime() {
         customerTimeMap[customer] = (customerTimeMap[customer] || 0) + duration;
     });
 
-    console.log(customerTimeMap);
-
     // Sort customers based on total time logged
     const sortedCustomers = Object.keys(customerTimeMap).sort((a, b) => customerTimeMap[a] - customerTimeMap[b]);
 
     // Display customers with least time logged
-    console.log('Customers with least time logged in the last 7 days:');
     let leastTimeCustomers = [];
     sortedCustomers.forEach(customer => {
         const totalTimeLogged = customerTimeMap[customer] / (1000 * 60 * 60); // Convert milliseconds to hours
         let leastStr = `${customer}: ${totalTimeLogged.toFixed(2)} hours`;
         leastTimeCustomers.push(leastStr);
-        console.log(leastStr);
     });
 
     // Display customers with no time logged
-    console.log('Customers with no time logged in the last 7 days:');
     let zeroTimeCustomers = [];
     const allCustomers = new Set(allTimeSplits.map(item => item.customer || 'Unknown'));
     const customersWithNoTimeLogged = Array.from(allCustomers).filter(customer => !(customer in customerTimeMap));
     customersWithNoTimeLogged.forEach(customer => {
         zeroTimeCustomers.push(customer);
-        console.log(customer);
     });
 
     // Filter out archived customers
