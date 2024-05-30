@@ -9,21 +9,9 @@
     <style>
         .top-container {
             display: flex;
+            flex-direction: column;
             justify-content: space-between;
             /* Items will be spaced evenly */
-        }
-
-        .top-container-left {
-            display: flex;
-            flex-direction: column;
-            width: 80%;
-            /* Adjust width as needed */
-        }
-
-        .top-container-right {
-            margin-left: 1em;
-            width: 20%;
-            /* Adjust width as needed */
         }
 
         .start-split-button-container {
@@ -44,41 +32,38 @@
     </div>
 
     <div class="top-container">
-        <div class="top-container-left">
-            <div class="start-split-button-container">
-                <button id="startSplitBtn">Start</button>
-                <button id="resetStartTimeBtn">Reset Start Time</button>
-                <button id="exportSplitsBtn">Export Splits</button>
-            </div>
-            <div class="in-progress-split-container">
-                <h3 id="splitInProgress">In Progress Split</h3>
-                <table id="inProgressSplitTable">
-                    <thead>
-                        <tr>
-                            <th>Start Time</th>
-                            <th>End Time</th>
-                            <th>Duration</th>
-                            <th>Customer</th>
-                            <th>Project</th>
-                            <th>Description</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-                <ul id="autocomplete-list" hidden></ul>
-            </div>
+        <div class="ignored-table-container">
+            <table id="ignoredProjects">
+                <thead>
+                    <tr>
+                        <th>Last 7 days - No time logged</th>
+                        <th>Last 7 days - Least time logged</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
         </div>
-        <div class="top-container-right">
-            <div class="ignored-table-container">
-                <table id="ignoredProjects">
-                    <thead>
-                        <tr>
-                            <th>Last 7 days</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
+        <div class="start-split-button-container">
+            <button id="startSplitBtn">Start</button>
+            <button id="resetStartTimeBtn">Reset Start Time</button>
+            <button id="exportSplitsBtn">Export Splits</button>
+        </div>
+        <div class="in-progress-split-container">
+            <h3 id="splitInProgress">In Progress Split</h3>
+            <table id="inProgressSplitTable">
+                <thead>
+                    <tr>
+                        <th>Start Time</th>
+                        <th>End Time</th>
+                        <th>Duration</th>
+                        <th>Customer</th>
+                        <th>Project</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+            <ul id="autocomplete-list" hidden></ul>
         </div>
     </div>
 
@@ -433,16 +418,10 @@
             let ignoredProjects = displayProjectsWithLeastTime();
             const tableBody = document.querySelector('#ignoredProjects tbody');
             tableBody.innerHTML = '';
-            const row1 = tableBody.insertRow();
-            row1.innerHTML = `
-                <td><b>No time logged</b><br><ul><li>
-                ${ignoredProjects['zeroTimeProjects'].join('<li>')}</td>
-                </ul>
-            `;
-            const row2 = tableBody.insertRow();
-            row2.innerHTML = `
-                <td><b>Least time logged</b><br><ul><li>
-                ${ignoredProjects['leastTimeProjects'].join('<li>')}</td>
+            const row = tableBody.insertRow();
+            row.innerHTML = `
+                <td><ul><li>${ignoredProjects['zeroTimeProjects'].join('<li>')}</td>
+                <td><ul><li>${ignoredProjects['leastTimeProjects'].join('<li>')}</td>
             `;
         }
 
