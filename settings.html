@@ -46,8 +46,8 @@
         // Function to render the item lists
         function renderLists(category) {
             // Get active and archived items from localStorage
-            let archivedItems = getArchivedItems(category);
-            const activeItems = getActiveItems(category);
+            let archivedItems = getArchivedItems(category).sort();
+            const activeItems = getActiveItems(category).sort();
 
             // Get and clear the lists in the body
             const activeItemsList = document.getElementById(`active-${category}-list`);
