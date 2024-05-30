@@ -452,7 +452,8 @@
         displayCurrentDateSplits();
         displayIgnoredProjects();
 
-        // Auto-export every hour
+        // Export on page load and Auto-export every hour
+        downloadAllTimeSplits();
         setInterval(downloadAllTimeSplits, 3600000);
 
     </script>
