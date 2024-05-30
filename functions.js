@@ -164,9 +164,6 @@ function filterOutArchivedCustomers(customers) {
 
 function getActiveCustomers() {
     // Retrieve the data from localStorage
-    const archivedCustomers = getArchivedCustomers();
-
-    // Retrieve the data from localStorage
     const uniqueCustomers = getUniqueValues('customer');
 
     // Filter out archived customers
