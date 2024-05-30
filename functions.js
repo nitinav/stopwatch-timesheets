@@ -121,3 +121,56 @@ function downloadAllTimeSplits() {
     downloadAnchorNode.click();
     downloadAnchorNode.remove();
 }
+
+function getUniqueValues(key, filterDict = {}) {
+    // Retrieve data from localStorage
+    const localStorageData = JSON.parse(localStorage.getItem('allTimeSplits')) || [];
+
+    // Apply optional filtering based on filterDict
+    const filteredData = localStorageData.filter(item => {
+        for (const [key, value] of Object.entries(filterDict)) {
+            if (item[key] !== value) {
+                return false;
+            }
+        }
+        return true;
+    });
+
+    // Extract unique values for key
+    const uniqueValues = [...new Set(filteredData.map(item => item[key]))];
+
+    return uniqueValues;
+}
+
+function getArchivedCustomers() {
+    // Retrieve the data from localStorage
+    const archivedCustomers = JSON.parse(localStorage.getItem('archivedCustomers'));
+    
+    // Check if archivedCustomers is null and return an empty array if it doesn't exist
+    if (archivedCustomers === null) {
+        return [];
+    }
+
+    return archivedCustomers;
+}
+
+function getActiveCustomers() {
+    // Retrieve the data from localStorage
+    const archivedCustomers = getArchivedCustomers();
+
+    // Retrieve the data from localStorage
+    const uniqueCustomers = getUniqueValues('customer');
+
+    // Filter out archived customers
+    const activeCustomers = uniqueCustomers.filter(customer => !archivedCustomers.includes(customer));
+
+    return activeCustomers;
+}
+
+// Function to update localStorage for archived customers
+function updateArchivedCustomers(archivedCustomers) {
+    if (archivedCustomers === null) {
+        archivedCustomers = [];
+    }
+    localStorage.setItem('archivedCustomers', JSON.stringify(archivedCustomers));
+}

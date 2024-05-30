@@ -21,6 +21,7 @@
         <a href="editSplits.html">Edit Splits</a>
         <a href="daily.html">Daily Summaries</a>
         <a href="weekly.html">Weekly Summaries</a>
+        <a href="settings.html">Settings</a>
     </div>
 
     <div class="top-container">
@@ -231,26 +232,6 @@
             updateTotalDurationText();
         }
 
-        function getUniqueValues(key, filterDict = {}) {
-            // Retrieve data from localStorage
-            const localStorageData = JSON.parse(localStorage.getItem('allTimeSplits')) || [];
-
-            // Apply optional filtering based on filterDict
-            const filteredData = localStorageData.filter(item => {
-                for (const [key, value] of Object.entries(filterDict)) {
-                    if (item[key] !== value) {
-                        return false;
-                    }
-                }
-                return true;
-            });
-
-            // Extract unique values for key
-            const uniqueValues = [...new Set(filteredData.map(item => item[key]))];
-
-            return uniqueValues;
-        }
-
         function showAutocomplete(event, element) {
             const autocompleteList = document.getElementById('autocomplete-list');
             if (event.key === 'Escape' || event.keyCode === 27) {
@@ -260,7 +241,7 @@
             elementIndex = element.cellIndex;
             if (elementIndex === 3) {
                 // customer cell
-                options = getUniqueValues('customer');
+                options = getActiveCustomers();
             } else if (elementIndex === 4) {
                 // project cell
                 let customer = element.previousElementSibling.textContent;

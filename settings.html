@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="navbar">
+        <a href="index.html">Home</a>
+        <a href="editSplits.html">Edit Splits</a>
+        <a href="daily.html">Daily Summaries</a>
+        <a href="weekly.html">Weekly Summaries</a>
+        <a href="settings.html" class="active">Settings</a>
+    </div>
+
+    <h2>Customer Lists</h2>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Active Customers</th>
+                <th>Archived Customers</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td id="activeCustomersList"></td>
+                <td id="archivedCustomersList"></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <script src="functions.js"></script>
+    <script>
+        let archivedCustomers = getArchivedCustomers();
+        const activeCustomers = getActiveCustomers();
+
+        // Function to render the customer lists
+        function renderLists() {
+            const activeCustomersList = document.getElementById('activeCustomersList');
+            const archivedCustomersList = document.getElementById('archivedCustomersList');
+
+            activeCustomersList.innerHTML = '';
+            archivedCustomersList.innerHTML = '';
+
+            activeCustomers.forEach(customer => {
+                const div = document.createElement('div');
+                div.textContent = customer;
+                const link = document.createElement('a');
+                link.href = '#';
+                link.textContent = 'Archive';
+                link.onclick = (event) => {
+                    event.preventDefault();
+                    archivedCustomers.push(customer);
+                    updateArchivedCustomers(archivedCustomers);
+                    renderLists();
+                };
+                div.appendChild(document.createTextNode(' ')); // Add space between name and link
+                div.appendChild(link);
+                activeCustomersList.appendChild(div);
+            });
+
+            archivedCustomers.forEach(customer => {
+                const div = document.createElement('div');
+                div.textContent = customer;
+                const link = document.createElement('a');
+                link.href = '#';
+                link.textContent = 'Unarchive';
+                link.onclick = (event) => {
+                    event.preventDefault();
+                    archivedCustomers = archivedCustomers.filter(c => c !== customer);
+                    updateArchivedCustomers(archivedCustomers);
+                    renderLists();
+                };
+                div.appendChild(document.createTextNode(' ')); // Add space between name and link
+                div.appendChild(link);
+                archivedCustomersList.appendChild(div);
+            });
+        }
+
+        renderLists();
+    </script>
+</body>
+
+</html>
