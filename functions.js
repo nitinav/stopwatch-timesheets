@@ -85,9 +85,17 @@ function displayProjectsWithLeastTime() {
     // Sort customers based on total time logged
     const sortedProjects = Object.keys(projectTimeMap).sort((a, b) => projectTimeMap[a] - projectTimeMap[b]);
 
+    // Get archived customers and projects
+    const archivedCustomers = getArchivedItems('customer');
+    const archivedProjects = getArchivedItems('project');
+
     // Display customers with least time logged
     let leastTimeProjects = [];
     sortedProjects.forEach(keyString => {
+        // Skip archived customers and projects
+        if (archivedCustomers.includes(keyString.split(' - ')[0]) || archivedProjects.includes(keyString)) {
+            return;
+        }
         const totalTimeLogged = projectTimeMap[keyString] / (1000 * 60 * 60); // Convert milliseconds to hours
         let leastStr = `${keyString}: ${totalTimeLogged.toFixed(2)} hours`;
         leastTimeProjects.push(leastStr);
@@ -95,8 +103,6 @@ function displayProjectsWithLeastTime() {
 
     // Display customers with no time logged
     let zeroTimeProjectsSet = new Set();
-    const archivedCustomers = getArchivedItems('customer');
-    const archivedProjects = getArchivedItems('project');
     allTimeSplits.forEach(item => {
         const customer = item.customer || 'Unknown';
         if (!archivedCustomers.includes(customer)) {
