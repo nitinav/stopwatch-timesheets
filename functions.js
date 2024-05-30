@@ -105,6 +105,10 @@ function displayCustomersWithLeastTime() {
         console.log(customer);
     });
 
+    // Filter out archived customers
+    leastTimeCustomers = filterOutArchivedCustomers(leastTimeCustomers);
+    zeroTimeCustomers = filterOutArchivedCustomers(zeroTimeCustomers);
+
     return {
         'leastTimeCustomers': leastTimeCustomers,
         'zeroTimeCustomers': zeroTimeCustomers
@@ -154,6 +158,11 @@ function getArchivedCustomers() {
     return archivedCustomers;
 }
 
+function filterOutArchivedCustomers(customers) {
+    const archivedCustomers = getArchivedCustomers();
+    return customers.filter(customer => !archivedCustomers.includes(customer));
+}
+
 function getActiveCustomers() {
     // Retrieve the data from localStorage
     const archivedCustomers = getArchivedCustomers();
@@ -162,7 +171,7 @@ function getActiveCustomers() {
     const uniqueCustomers = getUniqueValues('customer');
 
     // Filter out archived customers
-    const activeCustomers = uniqueCustomers.filter(customer => !archivedCustomers.includes(customer));
+    const activeCustomers = filterOutArchivedCustomers(uniqueCustomers);
 
     return activeCustomers;
 }
