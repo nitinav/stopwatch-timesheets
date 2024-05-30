@@ -451,6 +451,10 @@
         // Display content on page load
         displayCurrentDateSplits();
         displayIgnoredProjects();
+
+        // Auto-export every hour
+        setInterval(downloadAllTimeSplits, 3600000);
+
     </script>
 
 </body>
