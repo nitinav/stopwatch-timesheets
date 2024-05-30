@@ -107,7 +107,7 @@ function displayProjectsWithLeastTime() {
             }
         }
     });
-    const zeroTimeProjects = [...zeroTimeProjectsSet];
+    const zeroTimeProjects = [...zeroTimeProjectsSet].sort();
 
     return {
         'leastTimeProjects': leastTimeProjects,
