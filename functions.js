@@ -100,7 +100,6 @@ function displayCustomersWithLeastTime() {
     });
 
     // Filter out archived customers
-    leastTimeCustomers = filterOutArchivedCustomers(leastTimeCustomers);
     zeroTimeCustomers = filterOutArchivedCustomers(zeroTimeCustomers);
 
     return {
