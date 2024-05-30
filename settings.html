@@ -35,14 +35,17 @@
 
     <script src="functions.js"></script>
     <script>
-        let archivedCustomers = getArchivedCustomers();
-        const activeCustomers = getActiveCustomers();
+
 
         // Function to render the customer lists
         function renderLists() {
+            // Get active and archived customers from localStorage
+            let archivedCustomers = getArchivedCustomers();
+            const activeCustomers = getActiveCustomers();
+
+            // Get and clear the lists in the body
             const activeCustomersList = document.getElementById('activeCustomersList');
             const archivedCustomersList = document.getElementById('archivedCustomersList');
-
             activeCustomersList.innerHTML = '';
             archivedCustomersList.innerHTML = '';
 
