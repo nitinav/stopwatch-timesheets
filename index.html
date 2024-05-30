@@ -70,7 +70,7 @@
         </div>
         <div class="top-container-right">
             <div class="ignored-table-container">
-                <table id="ignoredCustomers">
+                <table id="ignoredProjects">
                     <thead>
                         <tr>
                             <th>Last 7 days</th>
@@ -160,7 +160,7 @@
                 insertSplitToTable(splitInProgress, 'todaysSplitsTable', currentDayTable = true);
                 saveCurrentDateSplits();
                 updateTotalDurationText();
-                displayIgnoredCustomers();
+                displayIgnoredProjects();
                 startStopwatch();
             }
         }
@@ -357,7 +357,7 @@
             }
             saveCurrentDateSplits();
             displayCurrentDateSplits();
-            displayIgnoredCustomers();
+            displayIgnoredProjects();
         }
 
         // Function to add a new row at given index
@@ -402,7 +402,7 @@
             });
 
             replaceRecordsForDate(currentDate, currentDateSplits);
-            displayIgnoredCustomers();
+            displayIgnoredProjects();
             updateTotalDurationText();
         }
 
@@ -429,19 +429,20 @@
             return allTimeSplits;
         }
 
-        function displayIgnoredCustomers() {
-            let ignoredCustomers = displayCustomersWithLeastTime();
-            const tableBody = document.querySelector('#ignoredCustomers tbody');
+        function displayIgnoredProjects() {
+            let ignoredProjects = displayProjectsWithLeastTime();
+            const tableBody = document.querySelector('#ignoredProjects tbody');
             tableBody.innerHTML = '';
             const row1 = tableBody.insertRow();
             row1.innerHTML = `
-                <td><b>No time logged</b><br>
-                ${ignoredCustomers['zeroTimeCustomers'].join('<br>')}</td>
+                <td><b>No time logged</b><br><ul><li>
+                ${ignoredProjects['zeroTimeProjects'].join('<li>')}</td>
+                </ul>
             `;
             const row2 = tableBody.insertRow();
             row2.innerHTML = `
-                <td><b>Least time logged</b><br>    
-                ${ignoredCustomers['leastTimeCustomers'].join('<br>')}</td>
+                <td><b>Least time logged</b><br><ul><li>
+                ${ignoredProjects['leastTimeProjects'].join('<li>')}</td>
             `;
         }
 
@@ -470,7 +471,7 @@
 
         // Display content on page load
         displayCurrentDateSplits();
-        displayIgnoredCustomers();
+        displayIgnoredProjects();
     </script>
 
 </body>

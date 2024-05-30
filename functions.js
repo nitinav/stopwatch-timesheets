@@ -54,7 +54,7 @@ function sortObjectByDate(obj, sortOrder) {
     return sortedObject;
 }
 
-function displayCustomersWithLeastTime() {
+function displayProjectsWithLeastTime() {
     const allTimeSplits = JSON.parse(localStorage.getItem('allTimeSplits')) || [];
 
     // Get the current date
@@ -71,40 +71,46 @@ function displayCustomersWithLeastTime() {
     });
 
     // Calculate total time logged for each customer
-    const customerTimeMap = {};
+    const projectTimeMap = {};
     last7DaysData.forEach(item => {
         const customer = item.customer || 'Unknown';
+        const project = item.project || 'Unknown';
+        const keyString = `${customer} - ${project}`;
         const startTime = new Date(item.startTime);
         const endTime = new Date(item.endTime);
         const duration = endTime - startTime;
-        customerTimeMap[customer] = (customerTimeMap[customer] || 0) + duration;
+        projectTimeMap[keyString] = (projectTimeMap[keyString] || 0) + duration;
     });
 
     // Sort customers based on total time logged
-    const sortedCustomers = Object.keys(customerTimeMap).sort((a, b) => customerTimeMap[a] - customerTimeMap[b]);
+    const sortedProjects = Object.keys(projectTimeMap).sort((a, b) => projectTimeMap[a] - projectTimeMap[b]);
 
     // Display customers with least time logged
-    let leastTimeCustomers = [];
-    sortedCustomers.forEach(customer => {
-        const totalTimeLogged = customerTimeMap[customer] / (1000 * 60 * 60); // Convert milliseconds to hours
-        let leastStr = `${customer}: ${totalTimeLogged.toFixed(2)} hours`;
-        leastTimeCustomers.push(leastStr);
+    let leastTimeProjects = [];
+    sortedProjects.forEach(keyString => {
+        const totalTimeLogged = projectTimeMap[keyString] / (1000 * 60 * 60); // Convert milliseconds to hours
+        let leastStr = `${keyString}: ${totalTimeLogged.toFixed(2)} hours`;
+        leastTimeProjects.push(leastStr);
     });
 
     // Display customers with no time logged
-    let zeroTimeCustomers = [];
-    const allCustomers = new Set(allTimeSplits.map(item => item.customer || 'Unknown'));
-    const customersWithNoTimeLogged = Array.from(allCustomers).filter(customer => !(customer in customerTimeMap));
-    customersWithNoTimeLogged.forEach(customer => {
-        zeroTimeCustomers.push(customer);
+    let zeroTimeProjectsSet = new Set();
+    const archivedCustomers = getArchivedCustomers();
+    allTimeSplits.forEach(item => {
+        const customer = item.customer || 'Unknown';
+        if (!archivedCustomers.includes(customer)) {
+            const project = item.project || 'Unknown';
+            const keyString = `${customer} - ${project}`;
+            if (!(keyString in projectTimeMap)) {
+                zeroTimeProjectsSet.add(keyString);
+            }
+        }
     });
-
-    // Filter out archived customers
-    zeroTimeCustomers = filterOutArchivedCustomers(zeroTimeCustomers);
+    const zeroTimeProjects = [...zeroTimeProjectsSet];
 
     return {
-        'leastTimeCustomers': leastTimeCustomers,
-        'zeroTimeCustomers': zeroTimeCustomers
+        'leastTimeProjects': leastTimeProjects,
+        'zeroTimeProjects': zeroTimeProjects
     };
 }
 
@@ -142,7 +148,7 @@ function getUniqueValues(key, filterDict = {}) {
 function getArchivedCustomers() {
     // Retrieve the data from localStorage
     const archivedCustomers = JSON.parse(localStorage.getItem('archivedCustomers'));
-    
+
     // Check if archivedCustomers is null and return an empty array if it doesn't exist
     if (archivedCustomers === null) {
         return [];
