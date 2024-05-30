@@ -258,6 +258,9 @@
 
         function showAutocomplete(event, element) {
             const autocompleteList = document.getElementById('autocomplete-list');
+            const elementPosition = element.getBoundingClientRect();
+            autocompleteList.style.left = `${elementPosition.left}px`;
+
             if (event.key === 'Escape' || event.keyCode === 27) {
                 autocompleteList.hidden = true;
                 return;
