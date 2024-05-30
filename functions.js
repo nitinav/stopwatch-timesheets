@@ -95,13 +95,14 @@ function displayProjectsWithLeastTime() {
 
     // Display customers with no time logged
     let zeroTimeProjectsSet = new Set();
-    const archivedCustomers = getArchivedCustomers();
+    const archivedCustomers = getArchivedItems('customer');
+    const archivedProjects = getArchivedItems('project');
     allTimeSplits.forEach(item => {
         const customer = item.customer || 'Unknown';
         if (!archivedCustomers.includes(customer)) {
             const project = item.project || 'Unknown';
             const keyString = `${customer} - ${project}`;
-            if (!(keyString in projectTimeMap)) {
+            if(!(keyString in projectTimeMap) && !archivedProjects.includes(keyString)) {
                 zeroTimeProjectsSet.add(keyString);
             }
         }
@@ -145,37 +146,58 @@ function getUniqueValues(key, filterDict = {}) {
     return uniqueValues;
 }
 
-function getArchivedCustomers() {
+function getArchivedItems(category) {
     // Retrieve the data from localStorage
-    const archivedCustomers = JSON.parse(localStorage.getItem('archivedCustomers'));
-
-    // Check if archivedCustomers is null and return an empty array if it doesn't exist
-    if (archivedCustomers === null) {
-        return [];
+    if (category === 'customer') {
+        const archivedCustomers = JSON.parse(localStorage.getItem('archivedCustomers'));
+        return archivedCustomers || [];
+    } else if (category === 'project') {
+        const archivedProjects = JSON.parse(localStorage.getItem('archivedProjects'));
+        return archivedProjects || [];
     }
-
-    return archivedCustomers;
 }
 
-function filterOutArchivedCustomers(customers) {
-    const archivedCustomers = getArchivedCustomers();
-    return customers.filter(customer => !archivedCustomers.includes(customer));
+function filterOutArchivedItems(items, category) {
+    const archivedItems = getArchivedItems(category);
+    return items.filter(item => !archivedItems.includes(item));
 }
 
-function getActiveCustomers() {
+function getAllCustomerProjectPairs() {
     // Retrieve the data from localStorage
-    const uniqueCustomers = getUniqueValues('customer');
+    const data = JSON.parse(localStorage.getItem('allTimeSplits'));
 
-    // Filter out archived customers
-    const activeCustomers = filterOutArchivedCustomers(uniqueCustomers);
+    // Initialize a Set to store unique customer-project pairs
+    const uniquePairs = new Set();
 
-    return activeCustomers;
+    // Iterate over each entry and add customer-project pairs to the Set
+    data.forEach(entry => {
+        const pair = `${entry.customer} - ${entry.project}`;
+        uniquePairs.add(pair);
+    });
+
+    // Convert the Set back to an array
+    return Array.from(uniquePairs);
+}
+
+function getActiveItems(category) {
+    // Retrieve the data from localStorage
+    if (category === 'customer') {
+        const uniqueCustomers = getUniqueValues(category);
+        return filterOutArchivedItems(uniqueCustomers, category);
+    } else if (category === 'project') {
+        const allProjects = getAllCustomerProjectPairs();
+        return filterOutArchivedItems(allProjects, category);
+    }
 }
 
 // Function to update localStorage for archived customers
-function updateArchivedCustomers(archivedCustomers) {
-    if (archivedCustomers === null) {
-        archivedCustomers = [];
+function updateArchivedItems(archivedItems, category) {
+    if (archivedItems === null) {
+        archivedItems = [];
     }
-    localStorage.setItem('archivedCustomers', JSON.stringify(archivedCustomers));
+    if (category === 'customer') {
+        localStorage.setItem('archivedCustomers', JSON.stringify(archivedItems));
+    } else if (category === 'project') {
+        localStorage.setItem('archivedProjects', JSON.stringify(archivedItems));
+    }
 }

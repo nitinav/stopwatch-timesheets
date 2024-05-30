@@ -17,18 +17,24 @@
         <a href="settings.html" class="active">Settings</a>
     </div>
 
-    <h2>Customer Lists</h2>
     <table border="1">
         <thead>
             <tr>
-                <th>Active Customers</th>
-                <th>Archived Customers</th>
+                <th>Category</th>
+                <th>Active</th>
+                <th>Archived</th>
             </tr>
         </thead>
         <tbody>
             <tr>
-                <td id="activeCustomersList"></td>
-                <td id="archivedCustomersList"></td>
+                <td>Customers</td>
+                <td id="active-customer-list"></td>
+                <td id="archived-customer-list"></td>
+            </tr>
+            <tr>
+                <td>Projects</td>
+                <td id="active-project-list"></td>
+                <td id="archived-project-list"></td>
             </tr>
         </tbody>
     </table>
@@ -37,54 +43,55 @@
     <script>
 
 
-        // Function to render the customer lists
-        function renderLists() {
-            // Get active and archived customers from localStorage
-            let archivedCustomers = getArchivedCustomers();
-            const activeCustomers = getActiveCustomers();
+        // Function to render the item lists
+        function renderLists(category) {
+            // Get active and archived items from localStorage
+            let archivedItems = getArchivedItems(category);
+            const activeItems = getActiveItems(category);
 
             // Get and clear the lists in the body
-            const activeCustomersList = document.getElementById('activeCustomersList');
-            const archivedCustomersList = document.getElementById('archivedCustomersList');
-            activeCustomersList.innerHTML = '';
-            archivedCustomersList.innerHTML = '';
+            const activeItemsList = document.getElementById(`active-${category}-list`);
+            const archivedItemsList = document.getElementById(`archived-${category}-list`);
+            activeItemsList.innerHTML = '';
+            archivedItemsList.innerHTML = '';
 
-            activeCustomers.forEach(customer => {
+            activeItems.forEach(item => {
                 const div = document.createElement('div');
-                div.textContent = customer;
+                div.textContent = item;
                 const link = document.createElement('a');
                 link.href = '#';
                 link.textContent = 'Archive';
                 link.onclick = (event) => {
                     event.preventDefault();
-                    archivedCustomers.push(customer);
-                    updateArchivedCustomers(archivedCustomers);
-                    renderLists();
+                    archivedItems.push(item);
+                    updateArchivedItems(archivedItems, category);
+                    renderLists(category);
                 };
                 div.appendChild(document.createTextNode(' ')); // Add space between name and link
                 div.appendChild(link);
-                activeCustomersList.appendChild(div);
+                activeItemsList.appendChild(div);
             });
 
-            archivedCustomers.forEach(customer => {
+            archivedItems.forEach(item => {
                 const div = document.createElement('div');
-                div.textContent = customer;
+                div.textContent = item;
                 const link = document.createElement('a');
                 link.href = '#';
                 link.textContent = 'Unarchive';
                 link.onclick = (event) => {
                     event.preventDefault();
-                    archivedCustomers = archivedCustomers.filter(c => c !== customer);
-                    updateArchivedCustomers(archivedCustomers);
-                    renderLists();
+                    archivedItems = archivedItems.filter(c => c !== item);
+                    updateArchivedItems(archivedItems, category);
+                    renderLists(category);
                 };
                 div.appendChild(document.createTextNode(' ')); // Add space between name and link
                 div.appendChild(link);
-                archivedCustomersList.appendChild(div);
+                archivedItemsList.appendChild(div);
             });
         }
 
-        renderLists();
+        renderLists('customer');
+        renderLists('project');
     </script>
 </body>
 

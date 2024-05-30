@@ -253,7 +253,7 @@
             elementIndex = element.cellIndex;
             if (elementIndex === 3) {
                 // customer cell
-                options = getActiveCustomers();
+                options = getActiveItems('customer');
             } else if (elementIndex === 4) {
                 // project cell
                 let customer = element.previousElementSibling.textContent;
