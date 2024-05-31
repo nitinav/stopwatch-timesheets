@@ -103,6 +103,7 @@ function renderTable(warningsOnly = false) {
         row.querySelector('select').addEventListener('change', (e) => {
             projectStatus[customerProjectKey] = e.target.value;
             localStorage.setItem('projectStatus', JSON.stringify(projectStatus));
+            renderTable(warningsOnly);
         });
         
         // Check if row should be displayed
