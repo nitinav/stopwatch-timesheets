@@ -17,10 +17,10 @@ function millisecondsToHours(milliseconds) {
 function getUniqueCustomerProjectPairs(data) {
     const pairs = new Set();
     data.forEach(entry => {
-        pairs.add(`${entry.customer}-${entry.project}`);
+        pairs.add(`${entry.customer}şpłïț${entry.project}`);
     });
     return Array.from(pairs).map(pair => {
-        const [customer, project] = pair.split('-');
+        const [customer, project] = pair.split('şpłïț');
         return { customer, project };
     });
 }
