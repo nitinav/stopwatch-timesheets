@@ -66,9 +66,10 @@ function initializeLast7DaysDurations(allPairs) {
     return last7DayDurations;
 }
 
-const statusOptions = ['In Progress', 'On Hold', 'Completed', 'Canceled', 'None', 'No Reminders'];
+const statusOptions = ['In Progress', 'On Hold', 'Completed', 'Canceled', 'None', 'Not Eligible'];
+const reminderOptions = ['In Progress', 'None'];
 
-function renderTable() {
+function renderTable(warningsOnly = false) {
     // Retrieve and organize data
     const allTimeSplits = getAllTimeSplits();
     const uniquePairs = getUniqueCustomerProjectPairs(allTimeSplits);
@@ -82,6 +83,7 @@ function renderTable() {
     uniquePairs.forEach(pair => {
         const customerProjectKey = `${pair.customer}-${pair.project}`;
         const statusValue = projectStatus[customerProjectKey];
+        let warningRow = false;
 
         const row = document.createElement('tr');
         row.innerHTML = `
@@ -94,12 +96,31 @@ function renderTable() {
             </td>
             <td>${durations[customerProjectKey]}</td>
         `;
+        if (reminderOptions.includes(statusValue) && durations[customerProjectKey] === 0) {
+            row.style.backgroundColor = "#ffe6e6";
+            warningRow = true;
+        }
         row.querySelector('select').addEventListener('change', (e) => {
             projectStatus[customerProjectKey] = e.target.value;
             localStorage.setItem('projectStatus', JSON.stringify(projectStatus));
         });
-        tbody.appendChild(row);
+        
+        // Check if row should be displayed
+        if (!warningsOnly || (warningsOnly && warningRow)) {
+            tbody.appendChild(row);
+        }
     });
 }
 
-renderTable();
+// When filterWarningsBtn is clicked, render the table with only the warning projects
+document.querySelector('#filterWarningsBtn').addEventListener('click', () => {
+    renderTable(true);
+});
+
+// When showAll is clicked, render the table with all projects
+document.querySelector('#showAllBtn').addEventListener('click', () => {
+    renderTable(false);
+});
+
+// Show all projects by default
+renderTable(false);
