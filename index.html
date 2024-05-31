@@ -11,8 +11,19 @@
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            margin-top: 2em;
             /* Items will be spaced evenly */
+        }
+        .content-container {
+            display: flex;
+            flex-direction: row;
+            margin-top: 2em;
+        }
+        .left-container {
+            width: 70%;
+        }
+        .right-container {
+            width: 30%;
+            margin-left: 2em;
         }
 
         .start-split-button-container {
@@ -30,16 +41,35 @@
         <a href="weekly.html">Weekly Summaries</a>
         <a href="manageProjects.html">Manage Projects</a>
     </div>
+    <div class="content-container">
+        <div class="left-container">
+            <div class="top-container">
+                <div class="start-split-button-container">
+                    <button id="startSplitBtn">Start</button>
+                    <button id="resetStartTimeBtn">Reset Start Time</button>
+                    <button id="exportSplitsBtn">Export Splits</button>
+                </div>
+                <div class="in-progress-split-container">
+                    <h3 id="splitInProgress">In Progress Split</h3>
+                    <table id="inProgressSplitTable">
+                        <thead>
+                            <tr>
+                                <th>Start Time</th>
+                                <th>End Time</th>
+                                <th>Duration</th>
+                                <th>Customer</th>
+                                <th>Project</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                    <ul id="autocomplete-list" hidden></ul>
+                </div>
+            </div>
 
-    <div class="top-container">
-        <div class="start-split-button-container">
-            <button id="startSplitBtn">Start</button>
-            <button id="resetStartTimeBtn">Reset Start Time</button>
-            <button id="exportSplitsBtn">Export Splits</button>
-        </div>
-        <div class="in-progress-split-container">
-            <h3 id="splitInProgress">In Progress Split</h3>
-            <table id="inProgressSplitTable">
+            <h3 id="dateDisplay"></h3>
+            <table id="todaysSplitsTable">
                 <thead>
                     <tr>
                         <th>Start Time</th>
@@ -48,33 +78,31 @@
                         <th>Customer</th>
                         <th>Project</th>
                         <th>Description</th>
+                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody></tbody>
             </table>
-            <ul id="autocomplete-list" hidden></ul>
+        </div>
+        <div class="right-container">
+            <button id="filterWarningsBtn">Filter Warnings Only</button>
+            <button id="showAllBtn">Show All</button>
+            <table id="customerProjectTable">
+                <thead>
+                    <tr>
+                        <th data-column="customer">Customer</th>
+                        <th data-column="project">Project</th>
+                        <th data-column="status">Status</th>
+                        <th data-column="duration">Duration (h)</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
         </div>
     </div>
 
-
-
-    <h3 id="dateDisplay"></h3>
-    <table id="todaysSplitsTable">
-        <thead>
-            <tr>
-                <th>Start Time</th>
-                <th>End Time</th>
-                <th>Duration</th>
-                <th>Customer</th>
-                <th>Project</th>
-                <th>Description</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody></tbody>
-    </table>
-
     <script src="functions.js"></script>
+    <script src="manageProjects.js"></script>
 
     <script>
         let startTime;
