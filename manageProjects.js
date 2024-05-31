@@ -122,8 +122,23 @@ function renderTable(warningsOnly = false) {
         // Check if row should be displayed
         if (!warningsOnly || (warningsOnly && warningRow)) {
             tbody.appendChild(row);
+            insertSortedByDuration(tbody, row);
         }
     });
+}
+
+function insertSortedByDuration(tbody, row) {
+    rowDuration = Number(row.cells[3].textContent);
+    const rows = tbody.querySelectorAll('tr');
+    for (let i = 0; i < rows.length; i++) {
+        const currentRow = rows[i];
+        currentRowDuration = Number(currentRow.cells[3].textContent);
+        if (rowDuration < currentRowDuration) {
+            tbody.insertBefore(row, currentRow);
+            return;
+        }
+    }
+    tbody.appendChild(row);
 }
 
 // When filterWarningsBtn is clicked, render the table with only the warning projects
