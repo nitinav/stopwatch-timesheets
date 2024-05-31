@@ -11,6 +11,7 @@
             display: flex;
             flex-direction: column;
             justify-content: space-between;
+            margin-top: 2em;
             /* Items will be spaced evenly */
         }
 
@@ -32,17 +33,6 @@
     </div>
 
     <div class="top-container">
-        <div class="ignored-table-container">
-            <table id="ignoredProjects">
-                <thead>
-                    <tr>
-                        <th>Last 7 days - No time logged</th>
-                        <th>Last 7 days - Least time logged</th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
-        </div>
         <div class="start-split-button-container">
             <button id="startSplitBtn">Start</button>
             <button id="resetStartTimeBtn">Reset Start Time</button>
@@ -145,7 +135,6 @@
                 insertSplitToTable(splitInProgress, 'todaysSplitsTable', currentDayTable = true);
                 saveCurrentDateSplits();
                 updateTotalDurationText();
-                displayIgnoredProjects();
                 startStopwatch();
             }
         }
@@ -253,7 +242,7 @@
             elementIndex = element.cellIndex;
             if (elementIndex === 3) {
                 // customer cell
-                options = getActiveItems('customer');
+                options = getUniqueValues('customer');
             } else if (elementIndex === 4) {
                 // project cell
                 let customer = element.previousElementSibling.textContent;
@@ -342,7 +331,6 @@
             }
             saveCurrentDateSplits();
             displayCurrentDateSplits();
-            displayIgnoredProjects();
         }
 
         // Function to add a new row at given index
@@ -387,7 +375,6 @@
             });
 
             replaceRecordsForDate(currentDate, currentDateSplits);
-            displayIgnoredProjects();
             updateTotalDurationText();
         }
 
@@ -412,17 +399,6 @@
 
             // Optionally, return the updated array
             return allTimeSplits;
-        }
-
-        function displayIgnoredProjects() {
-            let ignoredProjects = displayProjectsWithLeastTime();
-            const tableBody = document.querySelector('#ignoredProjects tbody');
-            tableBody.innerHTML = '';
-            const row = tableBody.insertRow();
-            row.innerHTML = `
-                <td><ul><li>${ignoredProjects['zeroTimeProjects'].join('<li>')}</td>
-                <td><ul><li>${ignoredProjects['leastTimeProjects'].join('<li>')}</td>
-            `;
         }
 
         // Event listeners for stopwatch buttons
@@ -450,7 +426,6 @@
 
         // Display content on page load
         displayCurrentDateSplits();
-        displayIgnoredProjects();
 
         // Export on page load (usually I reload the page when a new day starts)
         // And auto-export every hour
