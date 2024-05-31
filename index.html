@@ -146,8 +146,6 @@
                 saveCurrentDateSplits();
                 updateTotalDurationText();
                 displayIgnoredProjects();
-                // Export on every split to ensure backup
-                downloadAllTimeSplits();
                 startStopwatch();
             }
         }
@@ -454,8 +452,7 @@
         displayCurrentDateSplits();
         displayIgnoredProjects();
 
-        // Export on page load (usually I reload the page when a new day starts)
-        // And auto-export every hour
+        // Export on page load and Auto-export every hour
         downloadAllTimeSplits();
         setInterval(downloadAllTimeSplits, 3600000);
 
