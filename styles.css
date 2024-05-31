@@ -28,7 +28,7 @@ table th {
 }
 
 tr:hover {
-    background-color: #fffee0; /* Change to your desired highlight color */
+    background-color: #e5f8eb; /* Change to your desired highlight color */
 }
 
 input[type="time"] {

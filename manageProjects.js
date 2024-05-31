@@ -104,16 +104,21 @@ function renderTable(warningsOnly = false) {
             </td>
             <td>${millisecondsToHours(durations[customerProjectKey])}</td>
         `;
-        if (reminderOptions.includes(statusValue) && durations[customerProjectKey] === 0) {
-            row.style.backgroundColor = "#ffe6e6";
-            warningRow = true;
+        if (reminderOptions.includes(statusValue)) {
+            if (durations[customerProjectKey] === 0) {
+                row.style.backgroundColor = "#ffe6e6";
+                warningRow = true;
+            } else if (durations[customerProjectKey] < 1800000) {
+                row.style.backgroundColor = "#ffffe6";
+                warningRow = true;
+            }
         }
         row.querySelector('select').addEventListener('change', (e) => {
             projectStatus[customerProjectKey] = e.target.value;
             localStorage.setItem('projectStatus', JSON.stringify(projectStatus));
             renderTable(warningsOnly);
         });
-        
+
         // Check if row should be displayed
         if (!warningsOnly || (warningsOnly && warningRow)) {
             tbody.appendChild(row);
