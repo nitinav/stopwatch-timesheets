@@ -6,6 +6,14 @@ function getProjectStatus() {
     return JSON.parse(localStorage.getItem('projectStatus')) || {};
 }
 
+// Function to convert milliseconds to hours with two decimal points
+function millisecondsToHours(milliseconds) {
+    // Convert milliseconds to hours
+    const hours = milliseconds / 3600000;
+    // Round to two decimal points and return as a string
+    return hours.toFixed(2);
+}
+
 function getUniqueCustomerProjectPairs(data) {
     const pairs = new Set();
     data.forEach(entry => {
@@ -94,7 +102,7 @@ function renderTable(warningsOnly = false) {
                     ${statusOptions.map(status => `<option value="${status}" ${status === statusValue ? 'selected' : ''}>${status}</option>`).join('')}
                 </select>
             </td>
-            <td>${durations[customerProjectKey]}</td>
+            <td>${millisecondsToHours(durations[customerProjectKey])}</td>
         `;
         if (reminderOptions.includes(statusValue) && durations[customerProjectKey] === 0) {
             row.style.backgroundColor = "#ffe6e6";
