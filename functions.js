@@ -84,3 +84,10 @@ function getUniqueValues(key, filterDict = {}) {
 
     return uniqueValues;
 }
+
+// Function to calculate the total duration in milliseconds
+function calculateTotalDuration(startTime, endTime) {
+    const start = new Date(startTime);
+    const end = new Date(endTime);
+    return end - start;
+}
