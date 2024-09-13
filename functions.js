@@ -69,6 +69,9 @@ function getUniqueValues(key, filterDict = {}) {
     // Retrieve data from localStorage
     const localStorageData = JSON.parse(localStorage.getItem('allTimeSplits')) || [];
 
+    // Sort by endTime in descending order (most recent first)
+    localStorageData.sort((a, b) => new Date(b.endTime) - new Date(a.endTime));
+
     // Apply optional filtering based on filterDict
     const filteredData = localStorageData.filter(item => {
         for (const [key, value] of Object.entries(filterDict)) {
