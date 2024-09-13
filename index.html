@@ -15,17 +15,9 @@
         }
         .content-container {
             display: flex;
-            flex-direction: row;
+            flex-direction: column;
             margin-top: 1em;
         }
-        .left-container {
-            width: 70%;
-        }
-        .right-container {
-            width: 30%;
-            margin-left: 1em;
-        }
-
         .start-split-button-container {
             text-align: center;
             /* Align the button to the right */
@@ -41,7 +33,7 @@
         <a href="weekly.html">Weekly Summaries</a>
     </div>
     <div class="content-container">
-        <div class="left-container">
+
             <div class="top-container">
                 <div class="start-split-button-container">
                     <button id="startSplitBtn">Start</button>
@@ -82,22 +74,6 @@
                 </thead>
                 <tbody></tbody>
             </table>
-        </div>
-        <div class="right-container">
-            <button id="filterWarningsBtn">Filter Warnings Only</button>
-            <button id="showAllBtn">Show All</button>
-            <table id="customerProjectTable">
-                <thead>
-                    <tr>
-                        <th data-column="customer">Customer</th>
-                        <th data-column="project">Project</th>
-                        <th data-column="status">Status</th>
-                        <th data-column="duration">Duration (h)</th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
-        </div>
     </div>
 
     <script src="functions.js"></script>
