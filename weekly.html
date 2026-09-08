@@ -53,7 +53,7 @@
             return Object.values(summary);
         }
 
-        // Function to display weekly summary in tables grouped by week
+        // Function to display weekly summary in collapsible groups by week
         function displayWeeklySummaryTables(summary) {
             // Group summary by week
             let summaryByWeek = {};
@@ -66,16 +66,21 @@
 
             summaryByWeek = sortObjectByDate(summaryByWeek, 'desc');
 
-            // Create and display table for each week
+            // Create a collapsible details block for each week
             for (const week in summaryByWeek) {
                 if (summaryByWeek.hasOwnProperty(week)) {
-                    // Create a new heading element
-                    const heading = document.createElement('h3');
-                    heading.textContent = "Week ending " + week;
-                    document.body.appendChild(heading);
+                    const weekItems = summaryByWeek[week];
+                    const totalMs = weekItems.reduce((acc, it) => acc + it.totalDuration, 0);
 
-                    const table = createTable(summaryByWeek[week]);
-                    document.body.appendChild(table);
+                    const details = document.createElement('details');
+                    const summaryEl = document.createElement('summary');
+                    summaryEl.textContent = `Week ending ${week} — ${millisecondsToHours(totalMs)} hours`;
+                    details.appendChild(summaryEl);
+
+                    const table = createTable(weekItems);
+                    details.appendChild(table);
+
+                    document.body.appendChild(details);
                 }
             }
         }
@@ -96,11 +101,8 @@
                 </tbody>
             `;
 
-            totalDurationForWeek = 0;
-
             const tbody = table.querySelector('tbody');
             summary.forEach(item => {
-                totalDurationForWeek += item.totalDuration;
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${item.customer}</td>
@@ -111,16 +113,13 @@
                 tbody.appendChild(row);
             });
 
-            // insert the totalDurationForWeek into the 3rd cell of the header row; convert the totalDurationForWeek to hours
-            table.querySelector('thead tr th:nth-child(3)').innerHTML = `Total Duration<br> ${millisecondsToHours(totalDurationForWeek)} hours`;
-
             return table;
         }
 
         // Generate weekly summary
         const weeklySummary = generateWeeklySummary();
 
-        // Display summary in tables grouped by week
+        // Display summary in collapsible tables grouped by week
         displayWeeklySummaryTables(weeklySummary);
     </script>
 </body>
