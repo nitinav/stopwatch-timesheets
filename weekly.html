@@ -55,6 +55,15 @@
             padding: 6px 10px;
             cursor: pointer;
         }
+        /* Quarter layout: table on left, chart on right */
+        .quarter-row {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+        .quarter-table { flex: 1; }
+        .quarter-chart { width: 40%; min-width: 300px; }
     </style>
 </head>
 
@@ -66,6 +75,7 @@
         <a href="weekly.html" class="active">Weekly Summaries</a>
     </div>
     <script src="functions.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         // Retrieve data from local storage
         const allTimeSplits = JSON.parse(localStorage.getItem('allTimeSplits')) || [];
@@ -137,12 +147,19 @@
                 return bq - aq;
             });
 
-            // Render each quarter section with its table
+            // Render each quarter section with its table and chart
             quarterKeys.forEach(qk => {
+                const quarterSection = document.createElement('div');
                 const heading = document.createElement('h2');
                 heading.textContent = qk;
-                container.appendChild(heading);
+                quarterSection.appendChild(heading);
 
+                const quarterRow = document.createElement('div');
+                quarterRow.className = 'quarter-row';
+
+                // table (left)
+                const tableWrap = document.createElement('div');
+                tableWrap.className = 'quarter-table';
                 const table = document.createElement('table');
                 table.className = 'week-summary';
                 table.innerHTML = `
@@ -158,8 +175,15 @@
                     </thead>
                     <tbody></tbody>
                 `;
-
                 const tbody = table.querySelector('tbody');
+
+                // chart (right)
+                const chartWrap = document.createElement('div');
+                chartWrap.className = 'quarter-chart';
+                const canvas = document.createElement('canvas');
+                const safeKey = qk.replace(/[^a-zA-Z0-9_-]/g, '-');
+                canvas.id = `chart-${safeKey}`;
+                chartWrap.appendChild(canvas);
 
                 // sort weeks within quarter by weekISO desc
                 quarters[qk].sort((a, b) => new Date(b.weekISO) - new Date(a.weekISO));
@@ -215,7 +239,14 @@
                     tbody.appendChild(tr);
                 });
 
-                container.appendChild(table);
+                tableWrap.appendChild(table);
+                quarterRow.appendChild(tableWrap);
+                quarterRow.appendChild(chartWrap);
+                quarterSection.appendChild(quarterRow);
+                container.appendChild(quarterSection);
+
+                // create chart for this quarter
+                createQuarterChart(canvas, quarters[qk], weeklyMeta);
             });
 
             document.body.appendChild(container);
@@ -295,6 +326,57 @@
             });
 
             return table;
+        }
+
+        // Create a line chart for a quarter showing per-day values with horizontal y=7 line
+        function createQuarterChart(canvas, weekArray, weeklyMeta) {
+            if (!canvas || !window.Chart) return;
+            const labels = weekArray.map(wk => wk.weekDate).reverse(); // ascending by week
+            const perDayData = weekArray.map(wk => {
+                const meta = weeklyMeta[wk.weekDate] || { daysOff: 0 };
+                const totalHoursNum = (wk.totalDuration || 0) / 3600000;
+                return computePerDay(totalHoursNum, meta.daysOff);
+            }).reverse();
+
+            const targetLine = new Array(perDayData.length).fill(7);
+
+            const ctx = canvas.getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Per Day',
+                            data: perDayData,
+                            borderColor: '#3e95cd',
+                            backgroundColor: 'rgba(62,149,205,0.1)',
+                            fill: false,
+                            tension: 0.2,
+                        },
+                        {
+                            label: 'Target 7h',
+                            data: targetLine,
+                            borderColor: '#ff4d4f',
+                            borderDash: [6,4],
+                            fill: false,
+                            pointRadius: 0,
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        legend: { display: true }
+                    }
+                }
+            });
         }
 
         // Build and render
