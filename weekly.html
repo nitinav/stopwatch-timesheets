@@ -92,6 +92,20 @@
             return sortObjectByDate(weeks, 'desc');
         }
 
+        // Helper: compute per-day hours = totalHours / (5 - daysOff)
+        function computePerDay(totalHours, daysOff) {
+            const workingDays = 5 - (isNaN(daysOff) ? 0 : Number(daysOff));
+            if (workingDays <= 0) return 0;
+            const v = totalHours / workingDays;
+            return isFinite(v) ? v : 0;
+        }
+
+        // Helper: format numeric display to 2 decimal places
+        function formatNumber(n) {
+            const num = Number(n) || 0;
+            return num.toFixed(2);
+        }
+
         // Render week summary table with Show Logs buttons
         function renderWeekSummaryTable(weeksObj) {
             const container = document.createElement('div');
@@ -102,6 +116,9 @@
                     <tr>
                         <th>Week ending</th>
                         <th>Total Hours</th>
+                        <th>Days Off</th>
+                        <th>Per Day</th>
+                        <th>Comment</th>
                         <th>Show Logs</th>
                     </tr>
                 </thead>
@@ -109,15 +126,60 @@
             `;
 
             const tbody = table.querySelector('tbody');
+            const weeklyMeta = JSON.parse(localStorage.getItem('weeklyMeta') || '{}');
+
+            function saveWeeklyMeta() {
+                localStorage.setItem('weeklyMeta', JSON.stringify(weeklyMeta));
+            }
             for (const weekKey in weeksObj) {
                 if (!weeksObj.hasOwnProperty(weekKey)) continue;
                 const wk = weeksObj[weekKey];
                 const tr = document.createElement('tr');
+
+                // load or default meta for this week
+                const meta = weeklyMeta[wk.weekDate] || { daysOff: 0, comment: '' };
+                const totalHoursNum = (wk.totalDuration || 0) / 3600000;
+                const perDayValue = computePerDay(totalHoursNum, meta.daysOff);
+
                 tr.innerHTML = `
                     <td>${wk.weekDate}</td>
-                    <td>${millisecondsToHours(wk.totalDuration)}</td>
+                    <td class="total-hours">${formatNumber(totalHoursNum)}</td>
+                    <td class="days-off-cell"></td>
+                    <td class="per-day-cell">${formatNumber(perDayValue)}</td>
+                    <td class="comment-cell"></td>
                     <td><button class="show-logs">Show Logs</button></td>
                 `;
+
+                // Days Off input
+                const daysOffInput = document.createElement('input');
+                daysOffInput.type = 'number';
+                daysOffInput.step = '0.1';
+                daysOffInput.min = '0';
+                daysOffInput.max = '5';
+                daysOffInput.value = meta.daysOff;
+                daysOffInput.style.width = '60px';
+                daysOffInput.addEventListener('input', (e) => {
+                    const v = parseFloat(e.target.value) || 0;
+                    weeklyMeta[wk.weekDate] = weeklyMeta[wk.weekDate] || { daysOff: 0, comment: '' };
+                    weeklyMeta[wk.weekDate].daysOff = v;
+                    saveWeeklyMeta();
+                    const newPerDay = computePerDay(totalHoursNum, v);
+                    tr.querySelector('.per-day-cell').textContent = formatNumber(newPerDay);
+                });
+
+                tr.querySelector('.days-off-cell').appendChild(daysOffInput);
+
+                // Comment input
+                const commentInput = document.createElement('input');
+                commentInput.type = 'text';
+                commentInput.value = meta.comment || '';
+                commentInput.style.width = '200px';
+                commentInput.addEventListener('change', (e) => {
+                    weeklyMeta[wk.weekDate] = weeklyMeta[wk.weekDate] || { daysOff: 0, comment: '' };
+                    weeklyMeta[wk.weekDate].comment = e.target.value;
+                    saveWeeklyMeta();
+                });
+                tr.querySelector('.comment-cell').appendChild(commentInput);
 
                 tr.querySelector('button.show-logs').addEventListener('click', () => openLogsModal(wk));
 
