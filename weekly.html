@@ -78,11 +78,13 @@
                 const startDate = new Date(split.startTime);
                 const weekFinish = new Date(startDate.getFullYear(), startDate.getMonth(), 
                                            startDate.getDate() + 7 - getDayTreatSundayAsLast(startDate));
-                const weekKey = weekFinish.toLocaleDateString();
+                // Use an ISO date key for reliable sorting, and keep a localized display date
+                const weekISO = weekFinish.toISOString();
+                const weekKey = weekISO.slice(0,10); // YYYY-MM-DD
                 const duration = calculateTotalDuration(split.startTime, split.endTime);
 
                 if (!weeks[weekKey]) {
-                    weeks[weekKey] = { weekDate: weekKey, totalDuration: 0, logs: [] };
+                    weeks[weekKey] = { weekDate: weekFinish.toLocaleDateString(), weekISO: weekISO, totalDuration: 0, logs: [] };
                 }
 
                 weeks[weekKey].totalDuration += duration;
@@ -106,87 +108,116 @@
             return num.toFixed(2);
         }
 
-        // Render week summary table with Show Logs buttons
+        // Render week summary table with Show Logs buttons, grouped by calendar-year quarters
         function renderWeekSummaryTable(weeksObj) {
             const container = document.createElement('div');
-            const table = document.createElement('table');
-            table.className = 'week-summary';
-            table.innerHTML = `
-                <thead>
-                    <tr>
-                        <th>Week ending</th>
-                        <th>Total Hours</th>
-                        <th>Days Off</th>
-                        <th>Per Day</th>
-                        <th>Comment</th>
-                        <th>Show Logs</th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            `;
-
-            const tbody = table.querySelector('tbody');
             const weeklyMeta = JSON.parse(localStorage.getItem('weeklyMeta') || '{}');
 
             function saveWeeklyMeta() {
                 localStorage.setItem('weeklyMeta', JSON.stringify(weeklyMeta));
             }
-            for (const weekKey in weeksObj) {
-                if (!weeksObj.hasOwnProperty(weekKey)) continue;
-                const wk = weeksObj[weekKey];
-                const tr = document.createElement('tr');
 
-                // load or default meta for this week
-                const meta = weeklyMeta[wk.weekDate] || { daysOff: 0, comment: '' };
-                const totalHoursNum = (wk.totalDuration || 0) / 3600000;
-                const perDayValue = computePerDay(totalHoursNum, meta.daysOff);
+            // Group weeks into quarters (e.g., "2026 Q3")
+            const quarters = {};
+            Object.keys(weeksObj).forEach(key => {
+                const wk = weeksObj[key];
+                const iso = wk.weekISO || key; // ISO fallback to key
+                const d = new Date(iso);
+                const quarter = Math.floor(d.getMonth() / 3) + 1;
+                const quarterKey = `${d.getFullYear()} Q${quarter}`;
+                if (!quarters[quarterKey]) quarters[quarterKey] = [];
+                quarters[quarterKey].push(wk);
+            });
 
-                tr.innerHTML = `
-                    <td>${wk.weekDate}</td>
-                    <td class="total-hours">${formatNumber(totalHoursNum)}</td>
-                    <td class="days-off-cell"></td>
-                    <td class="per-day-cell">${formatNumber(perDayValue)}</td>
-                    <td class="comment-cell"></td>
-                    <td><button class="show-logs">Show Logs</button></td>
+            // Sort quarter keys descending by year then quarter
+            const quarterKeys = Object.keys(quarters).sort((a, b) => {
+                const [ay, aq] = a.split(' Q').map(Number);
+                const [by, bq] = b.split(' Q').map(Number);
+                if (ay !== by) return by - ay;
+                return bq - aq;
+            });
+
+            // Render each quarter section with its table
+            quarterKeys.forEach(qk => {
+                const heading = document.createElement('h2');
+                heading.textContent = qk;
+                container.appendChild(heading);
+
+                const table = document.createElement('table');
+                table.className = 'week-summary';
+                table.innerHTML = `
+                    <thead>
+                        <tr>
+                            <th>Week ending</th>
+                            <th>Total Hours</th>
+                            <th>Days Off</th>
+                            <th>Per Day</th>
+                            <th>Comment</th>
+                            <th>Show Logs</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
                 `;
 
-                // Days Off input
-                const daysOffInput = document.createElement('input');
-                daysOffInput.type = 'number';
-                daysOffInput.step = '0.1';
-                daysOffInput.min = '0';
-                daysOffInput.max = '5';
-                daysOffInput.value = meta.daysOff;
-                daysOffInput.style.width = '60px';
-                daysOffInput.addEventListener('input', (e) => {
-                    const v = parseFloat(e.target.value) || 0;
-                    weeklyMeta[wk.weekDate] = weeklyMeta[wk.weekDate] || { daysOff: 0, comment: '' };
-                    weeklyMeta[wk.weekDate].daysOff = v;
-                    saveWeeklyMeta();
-                    const newPerDay = computePerDay(totalHoursNum, v);
-                    tr.querySelector('.per-day-cell').textContent = formatNumber(newPerDay);
+                const tbody = table.querySelector('tbody');
+
+                // sort weeks within quarter by weekISO desc
+                quarters[qk].sort((a, b) => new Date(b.weekISO) - new Date(a.weekISO));
+
+                quarters[qk].forEach(wk => {
+                    const tr = document.createElement('tr');
+                    const meta = weeklyMeta[wk.weekDate] || { daysOff: 0, comment: '' };
+                    const totalHoursNum = (wk.totalDuration || 0) / 3600000;
+                    const perDayValue = computePerDay(totalHoursNum, meta.daysOff);
+
+                    tr.innerHTML = `
+                        <td>${wk.weekDate}</td>
+                        <td class="total-hours">${formatNumber(totalHoursNum)}</td>
+                        <td class="days-off-cell"></td>
+                        <td class="per-day-cell">${formatNumber(perDayValue)}</td>
+                        <td class="comment-cell"></td>
+                        <td><button class="show-logs">Show Logs</button></td>
+                    `;
+
+                    // Days Off input
+                    const daysOffInput = document.createElement('input');
+                    daysOffInput.type = 'number';
+                    daysOffInput.step = '0.1';
+                    daysOffInput.min = '0';
+                    daysOffInput.max = '5';
+                    daysOffInput.value = meta.daysOff;
+                    daysOffInput.style.width = '60px';
+                    daysOffInput.addEventListener('input', (e) => {
+                        const v = parseFloat(e.target.value) || 0;
+                        weeklyMeta[wk.weekDate] = weeklyMeta[wk.weekDate] || { daysOff: 0, comment: '' };
+                        weeklyMeta[wk.weekDate].daysOff = v;
+                        saveWeeklyMeta();
+                        const newPerDay = computePerDay(totalHoursNum, v);
+                        tr.querySelector('.per-day-cell').textContent = formatNumber(newPerDay);
+                    });
+
+                    tr.querySelector('.days-off-cell').appendChild(daysOffInput);
+
+                    // Comment input
+                    const commentInput = document.createElement('input');
+                    commentInput.type = 'text';
+                    commentInput.value = meta.comment || '';
+                    commentInput.style.width = '200px';
+                    commentInput.addEventListener('change', (e) => {
+                        weeklyMeta[wk.weekDate] = weeklyMeta[wk.weekDate] || { daysOff: 0, comment: '' };
+                        weeklyMeta[wk.weekDate].comment = e.target.value;
+                        saveWeeklyMeta();
+                    });
+                    tr.querySelector('.comment-cell').appendChild(commentInput);
+
+                    tr.querySelector('button.show-logs').addEventListener('click', () => openLogsModal(wk));
+
+                    tbody.appendChild(tr);
                 });
 
-                tr.querySelector('.days-off-cell').appendChild(daysOffInput);
+                container.appendChild(table);
+            });
 
-                // Comment input
-                const commentInput = document.createElement('input');
-                commentInput.type = 'text';
-                commentInput.value = meta.comment || '';
-                commentInput.style.width = '200px';
-                commentInput.addEventListener('change', (e) => {
-                    weeklyMeta[wk.weekDate] = weeklyMeta[wk.weekDate] || { daysOff: 0, comment: '' };
-                    weeklyMeta[wk.weekDate].comment = e.target.value;
-                    saveWeeklyMeta();
-                });
-                tr.querySelector('.comment-cell').appendChild(commentInput);
-
-                tr.querySelector('button.show-logs').addEventListener('click', () => openLogsModal(wk));
-
-                tbody.appendChild(tr);
-            }
-
-            container.appendChild(table);
             document.body.appendChild(container);
         }
 
