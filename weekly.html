@@ -6,6 +6,56 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Weekly Summary</title>
     <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Modal overlay styles for Show Logs */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        .modal-content {
+            background: #fff;
+            padding: 20px;
+            max-width: 90%;
+            max-height: 90%;
+            overflow: auto;
+            border-radius: 6px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+        .modal-close {
+            float: right;
+            cursor: pointer;
+            background: #eee;
+            border: 1px solid #ccc;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+        table.week-summary {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 8px;
+        }
+        table.week-summary th, table.week-summary td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        table.week-logs th, table.week-logs td {
+            border: 1px solid #ddd;
+            padding: 6px;
+        }
+        button.show-logs {
+            padding: 6px 10px;
+            cursor: pointer;
+        }
+    </style>
 </head>
 
 <body>
@@ -20,74 +70,111 @@
         // Retrieve data from local storage
         const allTimeSplits = JSON.parse(localStorage.getItem('allTimeSplits')) || [];
 
-        // Function to generate weekly summary
-        function generateWeeklySummary() {
-            const summary = {};
+        // Build week-level totals and keep logs for each week
+        function generateWeeklyTotals() {
+            const weeks = {}; // key: weekFinish locale string -> { weekDate, totalDuration, logs: [...] }
 
             allTimeSplits.forEach(split => {
                 const startDate = new Date(split.startTime);
-                // Get the end of the week
                 const weekFinish = new Date(startDate.getFullYear(), startDate.getMonth(), 
-                                           startDate.getDate() + 7 - getDayTreatSundayAsLast(startDate)); 
-                const weekKey = `${weekFinish.toLocaleDateString()}-${split.customer}-${split.project}`;
-                const customer = split.customer || 'Unknown';
-                const project = split.project || 'Unknown';
+                                           startDate.getDate() + 7 - getDayTreatSundayAsLast(startDate));
+                const weekKey = weekFinish.toLocaleDateString();
                 const duration = calculateTotalDuration(split.startTime, split.endTime);
-                const description = split.description || '';
 
-                if (!summary[weekKey]) {
-                    summary[weekKey] = {
-                        weekDate: weekFinish.toLocaleDateString(),
-                        date: startDate.toLocaleDateString(),
-                        customer: customer,
-                        project: project,
-                        totalDuration: duration,
-                        descriptions: [description]
-                    };
-                } else {
-                    summary[weekKey].totalDuration += duration;
-                    summary[weekKey].descriptions.push(description);
+                if (!weeks[weekKey]) {
+                    weeks[weekKey] = { weekDate: weekKey, totalDuration: 0, logs: [] };
                 }
+
+                weeks[weekKey].totalDuration += duration;
+                weeks[weekKey].logs.push(Object.assign({}, split, { duration }));
             });
 
-            return Object.values(summary);
+            return sortObjectByDate(weeks, 'desc');
         }
 
-        // Function to display weekly summary in collapsible groups by week
-        function displayWeeklySummaryTables(summary) {
-            // Group summary by week
-            let summaryByWeek = {};
-            summary.forEach(item => {
-                if (!summaryByWeek[item.weekDate]) {
-                    summaryByWeek[item.weekDate] = [];
-                }
-                summaryByWeek[item.weekDate].push(item);
-            });
-
-            summaryByWeek = sortObjectByDate(summaryByWeek, 'desc');
-
-            // Create a collapsible details block for each week
-            for (const week in summaryByWeek) {
-                if (summaryByWeek.hasOwnProperty(week)) {
-                    const weekItems = summaryByWeek[week];
-                    const totalMs = weekItems.reduce((acc, it) => acc + it.totalDuration, 0);
-
-                    const details = document.createElement('details');
-                    const summaryEl = document.createElement('summary');
-                    summaryEl.textContent = `Week ending ${week} — ${millisecondsToHours(totalMs)} hours`;
-                    details.appendChild(summaryEl);
-
-                    const table = createTable(weekItems);
-                    details.appendChild(table);
-
-                    document.body.appendChild(details);
-                }
-            }
-        }
-
-        // Function to create a table for a given summary
-        function createTable(summary) {
+        // Render week summary table with Show Logs buttons
+        function renderWeekSummaryTable(weeksObj) {
+            const container = document.createElement('div');
             const table = document.createElement('table');
+            table.className = 'week-summary';
+            table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th>Week ending</th>
+                        <th>Total Hours</th>
+                        <th>Show Logs</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            `;
+
+            const tbody = table.querySelector('tbody');
+            for (const weekKey in weeksObj) {
+                if (!weeksObj.hasOwnProperty(weekKey)) continue;
+                const wk = weeksObj[weekKey];
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${wk.weekDate}</td>
+                    <td>${millisecondsToHours(wk.totalDuration)}</td>
+                    <td><button class="show-logs">Show Logs</button></td>
+                `;
+
+                tr.querySelector('button.show-logs').addEventListener('click', () => openLogsModal(wk));
+
+                tbody.appendChild(tr);
+            }
+
+            container.appendChild(table);
+            document.body.appendChild(container);
+        }
+
+        // Create and open modal overlay showing logs table for a week
+        function openLogsModal(weekObj) {
+            // create overlay
+            const overlay = document.createElement('div');
+            overlay.className = 'modal-overlay';
+
+            const modal = document.createElement('div');
+            modal.className = 'modal-content';
+
+            const closeBtn = document.createElement('button');
+            closeBtn.className = 'modal-close';
+            closeBtn.textContent = 'Close';
+            closeBtn.addEventListener('click', () => document.body.removeChild(overlay));
+
+            const title = document.createElement('h3');
+            title.textContent = `Week ending ${weekObj.weekDate} — ${millisecondsToHours(weekObj.totalDuration)} hours`;
+
+            modal.appendChild(closeBtn);
+            modal.appendChild(title);
+
+            const logsTable = createLogsTable(weekObj.logs);
+            modal.appendChild(logsTable);
+
+            overlay.appendChild(modal);
+            document.body.appendChild(overlay);
+        }
+
+        // Create logs summary table grouped by customer + project
+        function createLogsTable(logs) {
+            const groups = {};
+
+            logs.forEach(l => {
+                const customer = l.customer || 'Unknown';
+                const project = l.project || 'Unknown';
+                const key = `${customer}||${project}`;
+                if (!groups[key]) {
+                    groups[key] = { customer, project, totalDuration: 0, descriptions: [] };
+                }
+                groups[key].totalDuration += l.duration || 0;
+                const desc = l.description || '';
+                if (desc && !groups[key].descriptions.includes(desc)) {
+                    groups[key].descriptions.push(desc);
+                }
+            });
+
+            const table = document.createElement('table');
+            table.className = 'week-logs';
             table.innerHTML = `
                 <thead>
                     <tr>
@@ -97,18 +184,19 @@
                         <th>Descriptions</th>
                     </tr>
                 </thead>
-                <tbody>
-                </tbody>
+                <tbody></tbody>
             `;
 
             const tbody = table.querySelector('tbody');
-            summary.forEach(item => {
+            Object.keys(groups).forEach(key => {
+                const g = groups[key];
                 const row = document.createElement('tr');
+                const descHtml = g.descriptions.length > 0 ? `<ul>${g.descriptions.map(d => `<li>${d}</li>`).join('')}</ul>` : '';
                 row.innerHTML = `
-                    <td>${item.customer}</td>
-                    <td>${item.project}</td>
-                    <td>${millisecondsToHours(item.totalDuration)}</td>
-                    <td>${item.descriptions.length > 0 ? `<ul>${item.descriptions.map(desc => `<li>${desc}</li>`).join('')}</ul>` : ''}</td>
+                    <td>${g.customer}</td>
+                    <td>${g.project}</td>
+                    <td>${millisecondsToHours(g.totalDuration)}</td>
+                    <td>${descHtml}</td>
                 `;
                 tbody.appendChild(row);
             });
@@ -116,11 +204,9 @@
             return table;
         }
 
-        // Generate weekly summary
-        const weeklySummary = generateWeeklySummary();
-
-        // Display summary in collapsible tables grouped by week
-        displayWeeklySummaryTables(weeklySummary);
+        // Build and render
+        const weeksObj = generateWeeklyTotals();
+        renderWeekSummaryTable(weeksObj);
     </script>
 </body>
 
