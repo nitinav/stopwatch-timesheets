@@ -44,16 +44,32 @@
         }
         table.week-summary th, table.week-summary td {
             border: 1px solid #ddd;
-            padding: 8px;
+            padding: 4px 6px;
             text-align: left;
+            vertical-align: middle;
+            font-size: 13px;
         }
         table.week-logs th, table.week-logs td {
             border: 1px solid #ddd;
             padding: 6px;
         }
         button.show-logs {
-            padding: 6px 10px;
+            padding: 3px 6px;
             cursor: pointer;
+            font-size: 13px;
+            line-height: 1.2;
+            border-radius: 3px;
+            background: #f8f8f8;
+            border: 1px solid #ccc;
+            color: inherit;
+        }
+        table.week-summary input[type="number"], table.week-summary input[type="text"] {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 4px 6px;
+            font-size: 13px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
         }
         /* Quarter layout: table on left, chart on right */
         .quarter-row {
@@ -210,7 +226,7 @@
                     daysOffInput.min = '0';
                     daysOffInput.max = '5';
                     daysOffInput.value = meta.daysOff;
-                    daysOffInput.style.width = '60px';
+                    
                     daysOffInput.addEventListener('input', (e) => {
                         const v = parseFloat(e.target.value) || 0;
                         weeklyMeta[wk.weekDate] = weeklyMeta[wk.weekDate] || { daysOff: 0, comment: '' };
@@ -226,7 +242,7 @@
                     const commentInput = document.createElement('input');
                     commentInput.type = 'text';
                     commentInput.value = meta.comment || '';
-                    commentInput.style.width = '200px';
+                    
                     commentInput.addEventListener('change', (e) => {
                         weeklyMeta[wk.weekDate] = weeklyMeta[wk.weekDate] || { daysOff: 0, comment: '' };
                         weeklyMeta[wk.weekDate].comment = e.target.value;
