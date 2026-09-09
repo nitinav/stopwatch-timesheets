@@ -362,9 +362,10 @@
 
         // Create logs summary table grouped by customer + project
         function createLogsTable(logs) {
-            const groups = {};
-
-            logs.forEach(l => {
+                    // ensure logs are sorted by startTime (local) before grouping/display
+                    const sortedLogs = (logs || []).slice().sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
+                    const groups = {};
+                    sortedLogs.forEach(l => {
                 const customer = l.customer || 'Unknown';
                 const project = l.project || 'Unknown';
                 const key = `${customer}||${project}`;
