@@ -470,6 +470,7 @@
             const row = tableRows[0];
             const time_now = new Date();
             row.cells[0].children[0].value = time_now.toTimeString().slice(0, 8);
+            lastStartTimestamp = time_now.getTime();
             updateSplitInProgress();
         });
 
