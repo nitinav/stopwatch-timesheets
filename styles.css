@@ -10,6 +10,19 @@ button {
     cursor: pointer;
 }
 
+.export-splits-button {
+    background-color: #2c7be5;
+    color: #fff;
+    border: 2px solid #1c5fc6;
+    border-radius: 6px;
+    font-weight: 600;
+    box-shadow: 0 2px 6px rgba(44, 123, 229, 0.25);
+}
+
+.export-splits-button:hover {
+    background-color: #1f6ed9;
+}
+
 table {
     margin-top: 20px;
     border-collapse: collapse;

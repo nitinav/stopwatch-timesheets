@@ -61,6 +61,10 @@ function downloadAllTimeSplits() {
     downloadAnchorNode.setAttribute('href', dataStr);
     downloadAnchorNode.setAttribute('download', 'allTimeSplits.json');
     document.body.appendChild(downloadAnchorNode); // required for firefox
+    localStorage.setItem('lastExportTimestamp', Date.now().toString());
+    if (typeof updateExportButtonVisibility === 'function') {
+        updateExportButtonVisibility();
+    }
     downloadAnchorNode.click();
     downloadAnchorNode.remove();
 }

@@ -39,7 +39,7 @@
                 <div class="start-split-button-container">
                     <button id="startSplitBtn">Start</button>
                     <button id="resetStartTimeBtn">Reset Start Time</button>
-                    <button id="exportSplitsBtn">Export Splits</button>
+                    <button id="exportSplitsBtn" class="export-splits-button" hidden>Export Splits</button>
                 </div>
                 <div class="in-progress-split-container">
                     <h3 id="splitInProgress">In Progress Split</h3>
@@ -419,6 +419,27 @@
             row.cells[0].children[0].value = new Date().toTimeString().slice(0, 8);
         });
 
+        const EXPORT_INTERVAL_MS = 60 * 60 * 1000;
+
+        function getLastExportTimestamp() {
+            const storedTimestamp = Number(localStorage.getItem('lastExportTimestamp'));
+            return Number.isFinite(storedTimestamp) ? storedTimestamp : 0;
+        }
+
+        function shouldShowExportButton() {
+            const lastExportTimestamp = getLastExportTimestamp();
+            return lastExportTimestamp === 0 || (Date.now() - lastExportTimestamp) >= EXPORT_INTERVAL_MS;
+        }
+
+        function updateExportButtonVisibility() {
+            const exportButton = document.getElementById('exportSplitsBtn');
+            if (!exportButton) {
+                return;
+            }
+
+            exportButton.hidden = !shouldShowExportButton();
+        }
+
         // Event listener for export splits button
         document.getElementById('exportSplitsBtn').addEventListener('click', downloadAllTimeSplits);
 
@@ -428,15 +449,12 @@
 
         // Display content on page load
         displayCurrentDateSplits();
+        updateExportButtonVisibility();
 
-        // Export on page load (usually I reload the page when a new day starts)
-        // And auto-export every hour
-        downloadAllTimeSplits();
-        setInterval(downloadAllTimeSplits, 3600000);
-
-        // Update per day display in navbar
+        // Update per day display in navbar and export button visibility
         updateNavbarPerDay();
         setInterval(updateNavbarPerDay, 60000); // Update every minute
+        setInterval(updateExportButtonVisibility, 60000);
 
     </script>
 
