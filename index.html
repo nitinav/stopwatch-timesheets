@@ -188,6 +188,7 @@
                 insertSplitToTable(splitInProgress, 'todaysSplitsTable', currentDayTable = true);
                 saveCurrentDateSplits();
                 updateTotalDurationText();
+                updateNavbarPerDay();
                 localStorage.removeItem(IN_PROGRESS_SPLIT_KEY);
                 document.getElementById('startSplitBtn').textContent = 'Start';
                 startStopwatch();
