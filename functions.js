@@ -210,14 +210,65 @@ function getCurrentWeekPerDay() {
     return computePerDay(totalHours, meta.daysOff, weekdaysRemaining);
 }
 
+// Determine the next milestone threshold for a week's average per day.
+function getNextMilestoneTarget(perDay) {
+    const value = Number(perDay) || 0;
+    if (value < 6) return 6;
+    if (value < 7) return 7;
+    return 7;
+}
+
+// Count the number of workdays completed in the current week, including today.
+function getWeekdaysPassedInWeek(date = new Date()) {
+    const currentDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const weekEnd = new Date(currentDate);
+    weekEnd.setDate(weekEnd.getDate() + (7 - getDayTreatSundayAsLast(currentDate)));
+    const weekStart = new Date(weekEnd);
+    weekStart.setDate(weekEnd.getDate() - 6);
+
+    let count = 0;
+    const cursor = new Date(weekStart);
+    while (cursor <= currentDate) {
+        const day = cursor.getDay();
+        if (day >= 1 && day <= 5) count++;
+        cursor.setDate(cursor.getDate() + 1);
+    }
+    return count;
+}
+
+function getCurrentWeekDaysOff(date = new Date()) {
+    const currentDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const weekEnd = new Date(currentDate);
+    weekEnd.setDate(weekEnd.getDate() + (7 - getDayTreatSundayAsLast(currentDate)));
+    const weekDate = weekEnd.toLocaleDateString();
+    const weeklyMeta = JSON.parse(localStorage.getItem('weeklyMeta') || '{}');
+    return Number(weeklyMeta[weekDate]?.daysOff) || 0;
+}
+
+// Determine how many additional hours are needed today to reach the next milestone.
+function getHoursNeededForNextMilestone(perDay, daysPassed = getWeekdaysPassedInWeek(), daysOff = getCurrentWeekDaysOff()) {
+    const value = Number(perDay) || 0;
+    const passed = Math.max(0, Number(daysPassed) || 0);
+    const off = Math.max(0, Number(daysOff) || 0);
+    const effectivePassed = Math.max(1, passed - off);
+    const target = getNextMilestoneTarget(value);
+    const totalHoursSoFar = value * effectivePassed;
+    const totalHoursNeeded = target * effectivePassed;
+    return Math.max(0, Number((totalHoursNeeded - totalHoursSoFar).toFixed(2)));
+}
+
 // Function to update Per Day display in navbar
 function updateNavbarPerDay() {
     const perDayDisplay = document.getElementById('navbar-per-day');
     const navbar = document.querySelector('.navbar');
     if (perDayDisplay && navbar) {
         const perDay = getCurrentWeekPerDay();
-        perDayDisplay.textContent = `This Week: ${formatNumber(perDay)} h`;
-        
+        const daysPassed = getWeekdaysPassedInWeek();
+        const daysOff = getCurrentWeekDaysOff();
+        const target = getNextMilestoneTarget(perDay);
+        const hoursNeeded = getHoursNeededForNextMilestone(perDay, daysPassed, daysOff);
+        perDayDisplay.textContent = `This Week: ${formatNumber(perDay)} h/day • Need ${formatNumber(hoursNeeded)} h today to reach ${formatNumber(target)} h/day`;
+
         // Apply navbar background color based on value
         navbar.classList.remove('per-day-good', 'per-day-bad');
         if (perDay >= 7) {
