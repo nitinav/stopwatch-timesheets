@@ -80,18 +80,70 @@
     <script src="manageProjects.js"></script>
 
     <script>
+        const IN_PROGRESS_SPLIT_KEY = 'inProgressSplit';
         let startTime;
         let lastStartTimestamp;
         let running = false;
-        let pausedTime = 0;
         let splits = [];
         let existingSplits = JSON.parse(localStorage.getItem('allTimeSplits'));
-        let currentDate;
+        let currentDate = new Date();
         let splitInProgress = {};
+
+        function saveSplitInProgressState() {
+            const persistedSplit = splitInProgress && {
+                startTime: splitInProgress.startTime,
+                customer: splitInProgress.customer,
+                project: splitInProgress.project,
+                description: splitInProgress.description
+            };
+
+            const state = {
+                running,
+                lastStartTimestamp,
+                splitInProgress: persistedSplit
+            };
+
+            if (persistedSplit && Object.keys(persistedSplit).length > 0) {
+                localStorage.setItem(IN_PROGRESS_SPLIT_KEY, JSON.stringify(state));
+            } else {
+                localStorage.removeItem(IN_PROGRESS_SPLIT_KEY);
+            }
+        }
+
+        function restoreSplitInProgressState() {
+            const savedState = JSON.parse(localStorage.getItem(IN_PROGRESS_SPLIT_KEY) || 'null');
+            if (!savedState || !savedState.splitInProgress) {
+                return false;
+            }
+
+            const { splitInProgress: savedSplit, running: savedRunning, lastStartTimestamp: savedStart } = savedState;
+            splitInProgress = {
+                ...savedSplit,
+                endTime: new Date().toLocaleString()
+            };
+            running = Boolean(savedRunning);
+            lastStartTimestamp = Number(savedStart) || Date.now();
+            currentDate = new Date();
+
+            const tableBody = document.querySelector('#inProgressSplitTable tbody');
+            tableBody.innerHTML = '';
+            insertSplitToTable(splitInProgress, 'inProgressSplitTable', false);
+
+            if (running) {
+                const elapsedMs = Date.now() - lastStartTimestamp;
+                startTime = performance.now() - elapsedMs;
+                document.getElementById('startSplitBtn').textContent = 'Split';
+                animateStopwatch();
+            } else {
+                document.getElementById('startSplitBtn').textContent = 'Start';
+            }
+
+            return true;
+        }
 
         function startStopwatch() {
             if (!running) {
-                startTime = performance.now() - pausedTime;
+                startTime = performance.now();
                 lastStartTimestamp = Date.now();
                 running = true;
                 animateStopwatch();
@@ -106,6 +158,7 @@
                 const tableBody = document.querySelector('#inProgressSplitTable tbody');
                 tableBody.innerHTML = '';
                 insertSplitToTable(splitInProgress, 'inProgressSplitTable', currentDayTable = false);
+                saveSplitInProgressState();
             }
         }
         function updateSplitInProgress() {
@@ -117,19 +170,12 @@
             splitInProgress.customer = row.cells[3].textContent;
             splitInProgress.project = row.cells[4].textContent;
             splitInProgress.description = row.cells[5].textContent;
-        }
-
-        function pauseStopwatch() {
-            if (running) {
-                running = false;
-                pausedTime = performance.now() - startTime;
-                document.getElementById('startSplitBtn').textContent = 'Start';
-            }
+            saveSplitInProgressState();
         }
 
         function splitStopwatch() {
             if (running) {
-                pauseStopwatch();
+                running = false;
                 const endTime = Date.now();
                 const splitTime = endTime - lastStartTimestamp;
                 splitInProgress.endTime = new Date(endTime).toLocaleString();
@@ -137,6 +183,8 @@
                 insertSplitToTable(splitInProgress, 'todaysSplitsTable', currentDayTable = true);
                 saveCurrentDateSplits();
                 updateTotalDurationText();
+                localStorage.removeItem(IN_PROGRESS_SPLIT_KEY);
+                document.getElementById('startSplitBtn').textContent = 'Start';
                 startStopwatch();
             }
         }
@@ -447,7 +495,9 @@
         document.querySelector('#todaysSplitsTable').addEventListener('input', saveCurrentDateSplits);
         document.querySelector('#inProgressSplitTable').addEventListener('input', updateSplitInProgress);
 
-        // Display content on page load
+        // Restore in-progress split state across page refreshes;
+        // then show today's saved splits and export status.
+        restoreSplitInProgressState();
         displayCurrentDateSplits();
         updateExportButtonVisibility();
 
