@@ -120,12 +120,39 @@
             return sortObjectByDate(weeks, 'desc');
         }
 
-        // Helper: compute per-day hours = totalHours / (5 - daysOff)
-        function computePerDay(totalHours, daysOff) {
-            const workingDays = 5 - (isNaN(daysOff) ? 0 : Number(daysOff));
+        // Helper: compute per-day hours = totalHours / (5 - weekdaysRemaining - daysOff)
+        // weekdaysRemaining: number of weekdays remaining in that week (Mon-Fri) from today to week end
+        function computePerDay(totalHours, daysOff, weekdaysRemaining = 0) {
+            const doff = isNaN(daysOff) ? 0 : Number(daysOff);
+            const workingDays = 5 - (isNaN(weekdaysRemaining) ? 0 : Number(weekdaysRemaining)) - doff;
             if (workingDays <= 0) return 0;
             const v = totalHours / workingDays;
             return isFinite(v) ? v : 0;
+        }
+
+        // Helper: number of weekdays remaining in the week for a given weekISO (YYYY-MM-DD or ISO string)
+        function weekdaysRemainingInWeek(weekISO) {
+            try {
+                const today = new Date();
+                // normalize to local date (00:00)
+                const t = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+                // start counting from tomorrow (do not count today)
+                t.setDate(t.getDate() + 1);
+                const weekEnd = new Date(weekISO);
+                // if weekEnd is before tomorrow, remaining is 0
+                if (weekEnd < t) return 0;
+
+                let count = 0;
+                const cur = new Date(t);
+                while (cur <= weekEnd) {
+                    const day = cur.getDay();
+                    if (day >= 1 && day <= 5) count++;
+                    cur.setDate(cur.getDate() + 1);
+                }
+                return count;
+            } catch (e) {
+                return 0;
+            }
         }
 
         // Helper: format numeric display to 2 decimal places
@@ -208,7 +235,8 @@
                     const tr = document.createElement('tr');
                     const meta = weeklyMeta[wk.weekDate] || { daysOff: 0, comment: '' };
                     const totalHoursNum = (wk.totalDuration || 0) / 3600000;
-                    const perDayValue = computePerDay(totalHoursNum, meta.daysOff);
+                    const weekdaysRemaining = weekdaysRemainingInWeek(wk.weekISO);
+                    const perDayValue = computePerDay(totalHoursNum, meta.daysOff, weekdaysRemaining);
 
                     tr.innerHTML = `
                         <td>${wk.weekDate}</td>
@@ -232,7 +260,7 @@
                         weeklyMeta[wk.weekDate] = weeklyMeta[wk.weekDate] || { daysOff: 0, comment: '' };
                         weeklyMeta[wk.weekDate].daysOff = v;
                         saveWeeklyMeta();
-                        const newPerDay = computePerDay(totalHoursNum, v);
+                        const newPerDay = computePerDay(totalHoursNum, v, weekdaysRemaining);
                         tr.querySelector('.per-day-cell').textContent = formatNumber(newPerDay);
                     });
 
@@ -351,7 +379,8 @@
             const perDayData = weekArray.map(wk => {
                 const meta = weeklyMeta[wk.weekDate] || { daysOff: 0 };
                 const totalHoursNum = (wk.totalDuration || 0) / 3600000;
-                return computePerDay(totalHoursNum, meta.daysOff);
+                const weekdaysRemaining = weekdaysRemainingInWeek(wk.weekISO);
+                return computePerDay(totalHoursNum, meta.daysOff, weekdaysRemaining);
             }).reverse();
 
             const targetLine = new Array(perDayData.length).fill(7);
