@@ -54,19 +54,57 @@ function sortObjectByDate(obj, sortOrder) {
     return sortedObject;
 }
 
-// Function to allow the user to download allTimeSplits in localstorage as a JSON file
+// Function to allow the user to download all localStorage entries as a zip of JSON files
 function downloadAllTimeSplits() {
-    const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(localStorage.getItem('allTimeSplits'));
-    const downloadAnchorNode = document.createElement('a');
-    downloadAnchorNode.setAttribute('href', dataStr);
-    downloadAnchorNode.setAttribute('download', 'allTimeSplits.json');
-    document.body.appendChild(downloadAnchorNode); // required for firefox
-    localStorage.setItem('lastExportTimestamp', Date.now().toString());
-    if (typeof updateExportButtonVisibility === 'function') {
-        updateExportButtonVisibility();
+    if (typeof JSZip === 'undefined') {
+        alert('The zip export library could not be loaded. Please refresh the page and try again.');
+        return;
     }
-    downloadAnchorNode.click();
-    downloadAnchorNode.remove();
+
+    const zip = new JSZip();
+
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (!key) {
+            continue;
+        }
+
+        const rawValue = localStorage.getItem(key);
+        let jsonValue = null;
+
+        try {
+            jsonValue = rawValue === null ? null : JSON.parse(rawValue);
+        } catch (error) {
+            jsonValue = rawValue;
+        }
+
+        zip.file(`${key}.json`, JSON.stringify(jsonValue, null, 2));
+    }
+
+    if (localStorage.length === 0) {
+        zip.file('README.txt', 'No localStorage entries were found to export.');
+    }
+
+    zip.generateAsync({ type: 'blob' })
+        .then(blob => {
+            const url = URL.createObjectURL(blob);
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.href = url;
+            downloadAnchorNode.download = `splits-localStorage-backup-${new Date().toISOString().replace(/[:.]/g, '-')}.zip`;
+            document.body.appendChild(downloadAnchorNode); // required for firefox
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+            URL.revokeObjectURL(url);
+
+            localStorage.setItem('lastExportTimestamp', Date.now().toString());
+            if (typeof updateExportButtonVisibility === 'function') {
+                updateExportButtonVisibility();
+            }
+        })
+        .catch(error => {
+            console.error('Failed to export localStorage as zip.', error);
+            alert('Failed to export localStorage as a zip file.');
+        });
 }
 
 function getUniqueValues(key, filterDict = {}) {
