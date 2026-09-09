@@ -80,6 +80,8 @@
         }
         .quarter-table { flex: 1; }
         .quarter-chart { width: 40%; min-width: 300px; }
+        .per-day-good { color: #0f9d58; font-weight: 700; }
+        .per-day-bad { color: #d93025; font-weight: 700; }
     </style>
 </head>
 
@@ -159,6 +161,18 @@
         function formatNumber(n) {
             const num = Number(n) || 0;
             return num.toFixed(2);
+        }
+
+        // Apply styling to a per-day cell based on numeric value
+        function stylePerDayCell(cell, value) {
+            if (!cell) return;
+            cell.classList.remove('per-day-good', 'per-day-bad');
+            const v = Number(value) || 0;
+            if (v >= 7) {
+                cell.classList.add('per-day-good');
+            } else if (v < 6) {
+                cell.classList.add('per-day-bad');
+            }
         }
 
         // Render week summary table with Show Logs buttons, grouped by calendar-year quarters
@@ -263,6 +277,10 @@
                         <td><button class="show-logs">Show Logs</button></td>
                     `;
 
+                    // style per-day cell according to value
+                    const perDayCell = tr.querySelector('.per-day-cell');
+                    stylePerDayCell(perDayCell, perDayValue);
+
                     // Days Off input
                     const daysOffInput = document.createElement('input');
                     daysOffInput.type = 'number';
@@ -277,7 +295,9 @@
                         weeklyMeta[wk.weekDate].daysOff = v;
                         saveWeeklyMeta();
                         const newPerDay = computePerDay(totalHoursNum, v, weekdaysRemaining);
-                        tr.querySelector('.per-day-cell').textContent = formatNumber(newPerDay);
+                        const cell = tr.querySelector('.per-day-cell');
+                        cell.textContent = formatNumber(newPerDay);
+                        stylePerDayCell(cell, newPerDay);
                     });
 
                     tr.querySelector('.days-off-cell').appendChild(daysOffInput);
