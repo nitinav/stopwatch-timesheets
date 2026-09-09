@@ -162,6 +162,10 @@
             }
         }
         function updateSplitInProgress() {
+            /*
+            Update the splitInProgress object with the current values from the in-progress split table.
+            This function is called whenever the user edits the in-progress split table.
+            */
             const tableRows = document.querySelectorAll('#inProgressSplitTable tbody tr');
             const row = tableRows[0];
             let datePart = currentDate.toLocaleDateString() + ', ';
@@ -464,7 +468,9 @@
         document.getElementById('resetStartTimeBtn').addEventListener('click', function () {
             const tableRows = document.querySelectorAll('#inProgressSplitTable tbody tr');
             const row = tableRows[0];
-            row.cells[0].children[0].value = new Date().toTimeString().slice(0, 8);
+            const time_now = new Date();
+            row.cells[0].children[0].value = time_now.toTimeString().slice(0, 8);
+            updateSplitInProgress();
         });
 
         const EXPORT_INTERVAL_MS = 60 * 60 * 1000;
