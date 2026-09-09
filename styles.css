@@ -38,11 +38,22 @@ input[type="time"] {
 /* Navigation bar styling */
 .navbar {
     background-color: #333;
-    overflow: hidden;
+    overflow: auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background-color 0.3s ease;
+}
+
+.navbar.per-day-good {
+    background-color: #498124;
+}
+
+.navbar.per-day-bad {
+    background-color: #953434;
 }
 
 .navbar a {
-    float: left;
     display: block;
     color: #f2f2f2;
     text-align: center;
@@ -58,6 +69,13 @@ input[type="time"] {
 /* Active link */
 .active {
     background-color: #555;
+}
+
+#navbar-per-day {
+    color: #f2f2f2;
+    padding: 14px 20px;
+    margin-left: auto;
+    font-weight: bold;
 }
 
 #autocomplete-list {

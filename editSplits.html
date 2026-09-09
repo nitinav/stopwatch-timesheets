@@ -14,6 +14,7 @@
         <a href="editSplits.html" class="active">Edit Splits</a>
         <a href="daily.html">Daily Summaries</a>
         <a href="weekly.html">Weekly Summaries</a>
+        <div id="navbar-per-day"></div>
     </div>
     <br><br>
     <table id="data-table">
@@ -128,6 +129,10 @@
 
         // Render the table initially
         renderTable();
+
+        // Update per day display in navbar
+        updateNavbarPerDay();
+        setInterval(updateNavbarPerDay, 60000); // Update every minute
     </script>
 </body>
 

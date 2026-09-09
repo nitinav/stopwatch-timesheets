@@ -94,3 +94,94 @@ function calculateTotalDuration(startTime, endTime) {
     const end = new Date(endTime);
     return end - start;
 }
+
+// Helper: format numeric display to 2 decimal places
+function formatNumber(n) {
+    const num = Number(n) || 0;
+    return num.toFixed(2);
+}
+
+// Helper: compute per-day hours = totalHours / (5 - weekdaysRemaining - daysOff)
+function computePerDay(totalHours, daysOff, weekdaysRemaining = 0) {
+    const doff = isNaN(daysOff) ? 0 : Number(daysOff);
+    const workingDays = 5 - (isNaN(weekdaysRemaining) ? 0 : Number(weekdaysRemaining)) - doff;
+    if (workingDays <= 0) return 0;
+    const v = totalHours / workingDays;
+    return isFinite(v) ? v : 0;
+}
+
+// Helper: number of weekdays remaining in the week for a given weekISO (YYYY-MM-DD or ISO string)
+function weekdaysRemainingInWeek(weekISO) {
+    try {
+        const today = new Date();
+        // normalize to local date (00:00)
+        const t = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        // start counting from tomorrow (do not count today)
+        t.setDate(t.getDate() + 1);
+        const weekEnd = new Date(weekISO);
+        // if weekEnd is before tomorrow, remaining is 0
+        if (weekEnd < t) return 0;
+
+        let count = 0;
+        const cur = new Date(t);
+        while (cur <= weekEnd) {
+            const day = cur.getDay();
+            if (day >= 1 && day <= 5) count++;
+            cur.setDate(cur.getDate() + 1);
+        }
+        return count;
+    } catch (e) {
+        return 0;
+    }
+}
+
+// Function to calculate current week's Per Day value
+function getCurrentWeekPerDay() {
+    const allTimeSplits = JSON.parse(localStorage.getItem('allTimeSplits')) || [];
+    const weeklyMeta = JSON.parse(localStorage.getItem('weeklyMeta') || '{}');
+    
+    // Get today's date
+    const today = new Date();
+    const currentDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    
+    // Calculate week end (Friday or Sunday depending on convention)
+    const weekEnd = new Date(currentDate);
+    weekEnd.setDate(weekEnd.getDate() + (7 - getDayTreatSundayAsLast(currentDate)));
+    const weekKey = weekEnd.toISOString().slice(0, 10);
+    const weekDate = weekEnd.toLocaleDateString();
+    
+    // Sum total duration for this week
+    let totalDuration = 0;
+    allTimeSplits.forEach(split => {
+        const splitDate = new Date(split.startTime);
+        const splitWeekEnd = new Date(splitDate.getFullYear(), splitDate.getMonth(), 
+                                     splitDate.getDate() + 7 - getDayTreatSundayAsLast(splitDate));
+        if (splitWeekEnd.toISOString().slice(0, 10) === weekKey) {
+            totalDuration += calculateTotalDuration(split.startTime, split.endTime);
+        }
+    });
+    
+    const totalHours = totalDuration / 3600000;
+    const meta = weeklyMeta[weekDate] || { daysOff: 0 };
+    const weekdaysRemaining = weekdaysRemainingInWeek(weekEnd.toISOString().slice(0, 10));
+    
+    return computePerDay(totalHours, meta.daysOff, weekdaysRemaining);
+}
+
+// Function to update Per Day display in navbar
+function updateNavbarPerDay() {
+    const perDayDisplay = document.getElementById('navbar-per-day');
+    const navbar = document.querySelector('.navbar');
+    if (perDayDisplay && navbar) {
+        const perDay = getCurrentWeekPerDay();
+        perDayDisplay.textContent = `This Week: ${formatNumber(perDay)} h`;
+        
+        // Apply navbar background color based on value
+        navbar.classList.remove('per-day-good', 'per-day-bad');
+        if (perDay >= 7) {
+            navbar.classList.add('per-day-good');
+        } else if (perDay < 6) {
+            navbar.classList.add('per-day-bad');
+        }
+    }
+}

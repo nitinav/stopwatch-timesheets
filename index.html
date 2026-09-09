@@ -32,6 +32,7 @@
         <a href="editSplits.html">Edit Splits</a>
         <a href="daily.html">Daily Summaries</a>
         <a href="weekly.html">Weekly Summaries</a>
+        <div id="navbar-per-day"></div>
     </div>
     <div class="content-container">
             <div class="top-container">
@@ -432,6 +433,10 @@
         // And auto-export every hour
         downloadAllTimeSplits();
         setInterval(downloadAllTimeSplits, 3600000);
+
+        // Update per day display in navbar
+        updateNavbarPerDay();
+        setInterval(updateNavbarPerDay, 60000); // Update every minute
 
     </script>
 
