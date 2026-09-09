@@ -17,6 +17,8 @@
         <div id="navbar-per-day"></div>
     </div>
     <br><br>
+    <label for="date-picker">Select Day: </label>
+    <input type="date" id="date-picker" />
     <table id="data-table">
         <thead>
             <tr>
@@ -38,8 +40,41 @@
         // Empty data row
         let empty_data_row = { 'startTime': '', 'endTime': '', 'customer': '', 'project': '', 'description': '' };
 
-        // Retrieve data from local storage
-        let data = JSON.parse(localStorage.getItem('allTimeSplits')) || [];
+        // Selected day (YYYY-MM-DD) using local timezone
+        function localISOFromDate(d) {
+            const date = new Date(d);
+            if (isNaN(date)) return '';
+            const y = date.getFullYear();
+            const m = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${y}-${m}-${day}`;
+        }
+
+        let selectedDate = localISOFromDate(new Date());
+
+        // Data for the selected day only
+        let data = [];
+
+        // Function to load data for a given date (YYYY-MM-DD)
+        function loadDataForDate(dateISO) {
+            const all = JSON.parse(localStorage.getItem('allTimeSplits')) || [];
+            data = all.filter(item => {
+                try {
+                    return localISOFromDate(item.startTime) === dateISO;
+                } catch (e) {
+                    return false;
+                }
+            });
+            renderTable();
+        }
+
+        // Initialize date picker
+        const datePickerElement = document.getElementById('date-picker');
+        datePickerElement.value = selectedDate;
+        datePickerElement.addEventListener('change', (e) => {
+            selectedDate = e.target.value;
+            loadDataForDate(selectedDate);
+        });
 
         // Function to render the table
         function renderTable() {
@@ -88,14 +123,15 @@
 
         // Function to add a new row above
         function insertRowAbove(index) {
-            data.splice(index, 0, empty_data_row);
+            // insert a shallow copy to avoid referencing the same object
+            data.splice(index, 0, Object.assign({}, empty_data_row));
             renderTable();
             saveChanges();
         }
 
         // Function to add a new row below
         function insertRowBelow(index) {
-            data.splice(index + 1, 0, empty_data_row);
+            data.splice(index + 1, 0, Object.assign({}, empty_data_row));
             renderTable();
             saveChanges();
         }
@@ -110,7 +146,7 @@
         // Save edited values back to local storage
         function saveChanges() {
             const tableRows = document.querySelectorAll('#data-table tbody tr');
-            data = [];
+            const editedForDay = [];
 
             tableRows.forEach(row => {
                 const startTime = row.cells[0].textContent;
@@ -118,17 +154,30 @@
                 const customer = row.cells[3].textContent;
                 const project = row.cells[4].textContent;
                 const description = row.cells[5].textContent;
-                data.push({ startTime, endTime, description, customer, project });
+                editedForDay.push({ startTime, endTime, description, customer, project });
             });
 
-            localStorage.setItem('allTimeSplits', JSON.stringify(data));
+            // Merge editedForDay into allTimeSplits while preserving other days
+            const all = JSON.parse(localStorage.getItem('allTimeSplits')) || [];
+            const others = all.filter(item => {
+                try {
+                    return localISOFromDate(item.startTime) !== selectedDate;
+                } catch (e) {
+                    return true;
+                }
+            });
+            const newAll = others.concat(editedForDay);
+            localStorage.setItem('allTimeSplits', JSON.stringify(newAll));
+
+            // update local `data` to reflect saved rows
+            data = editedForDay;
         }
 
         // Event listener for table cell editing
         document.querySelector('#data-table').addEventListener('input', saveChanges);
 
-        // Render the table initially
-        renderTable();
+        // Render the table initially for the selected date
+        loadDataForDate(selectedDate);
 
         // Update per day display in navbar
         updateNavbarPerDay();
