@@ -228,23 +228,47 @@ function computePerDay(totalHours, daysOff, weekdaysRemaining = 0) {
 // Helper: number of weekdays remaining in the week for a given weekISO (YYYY-MM-DD or ISO string)
 function weekdaysRemainingInWeek(weekISO) {
     try {
-        const today = new Date();
+        const now = new Date();
         // normalize to local date (00:00)
-        const t = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-        // start counting from tomorrow (do not count today)
-        t.setDate(t.getDate() + 1);
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
         const weekEnd = new Date(weekISO);
-        // if weekEnd is before tomorrow, remaining is 0
-        if (weekEnd < t) return 0;
+        if (isNaN(weekEnd)) return 0;
 
+        // if weekEnd is before today, remaining is 0
+        if (weekEnd < today) return 0;
+
+        // Count full weekdays from tomorrow through weekEnd (do not count today as a full day)
+        const start = new Date(today);
+        start.setDate(start.getDate() + 1);
         let count = 0;
-        const cur = new Date(t);
+        const cur = new Date(start);
         while (cur <= weekEnd) {
             const day = cur.getDay();
             if (day >= 1 && day <= 5) count++;
             cur.setDate(cur.getDate() + 1);
         }
-        return count;
+
+        // Add fractional part for today's remaining work hours (work hours 08:00-18:00 => 10 hours)
+        let fractionRemaining = 0;
+        const todayDay = today.getDay();
+        if (todayDay >= 1 && todayDay <= 5 && weekEnd >= today) {
+            const workStart = new Date(today);
+            workStart.setHours(8, 0, 0, 0);
+            const workEnd = new Date(today);
+            workEnd.setHours(18, 0, 0, 0);
+
+            if (now < workStart) {
+                fractionRemaining = 1; // full workday remaining
+            } else if (now >= workEnd) {
+                fractionRemaining = 0; // workday over
+            } else {
+                const remainingMs = workEnd - now;
+                const totalMs = workEnd - workStart; // 10 hours in ms
+                fractionRemaining = remainingMs / totalMs;
+            }
+        }
+
+        return count + fractionRemaining;
     } catch (e) {
         return 0;
     }
