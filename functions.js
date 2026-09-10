@@ -302,7 +302,7 @@ function getCurrentWeekPerDay() {
     
     const totalHours = totalDuration / 3600000;
     const meta = weeklyMeta[weekDate] || { daysOff: 0 };
-    const weekdaysRemaining = weekdaysRemainingInWeek(weekEnd.toISOString().slice(0, 10));
+    const weekdaysRemaining = weekdaysRemainingInWeek(weekKey);
     
     return computePerDay(totalHours, meta.daysOff, weekdaysRemaining);
 }
@@ -343,14 +343,14 @@ function getCurrentWeekDaysOff(date = new Date()) {
 }
 
 // Determine how many additional hours are needed today to reach the next milestone.
-function getHoursNeededForNextMilestone(perDay, daysPassed = getWeekdaysPassedInWeek(), daysOff = getCurrentWeekDaysOff()) {
+function getHoursNeededForNextMilestone(perDay, daysPassed, daysOff = getCurrentWeekDaysOff()) {
     const value = Number(perDay) || 0;
     const passed = Math.max(0, Number(daysPassed) || 0);
     const off = Math.max(0, Number(daysOff) || 0);
     const effectivePassed = Math.max(1, passed - off);
     const target = getNextMilestoneTarget(value);
     const totalHoursSoFar = value * effectivePassed;
-    const totalHoursNeeded = target * effectivePassed;
+    const totalHoursNeeded = target * Math.ceil(effectivePassed);
     return Math.max(0, Number((totalHoursNeeded - totalHoursSoFar).toFixed(2)));
 }
 
@@ -359,11 +359,18 @@ function updateNavbarPerDay() {
     const perDayDisplay = document.getElementById('navbar-per-day');
     const navbar = document.querySelector('.navbar');
     if (perDayDisplay && navbar) {
+        // get hours per day so far this week
         const perDay = getCurrentWeekPerDay();
-        const daysPassed = getWeekdaysPassedInWeek();
+
+        // get hours needed today to reach next milestone
+        const weekEnd = new Date();
+        weekEnd.setDate(weekEnd.getDate() + (7 - getDayTreatSundayAsLast(weekEnd)));
+        const weekKey = weekEnd.toISOString().slice(0, 10);
+        const daysPassed = 5 - weekdaysRemainingInWeek(weekKey);
         const daysOff = getCurrentWeekDaysOff();
         const target = getNextMilestoneTarget(perDay);
         const hoursNeeded = getHoursNeededForNextMilestone(perDay, daysPassed, daysOff);
+
         perDayDisplay.textContent = `This Week: ${formatNumber(perDay)} h/day • Need ${formatNumber(hoursNeeded)} h today to reach ${formatNumber(target)} h/day`;
 
         // Apply navbar background color based on value
