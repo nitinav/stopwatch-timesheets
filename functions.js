@@ -54,6 +54,65 @@ function sortObjectByDate(obj, sortOrder) {
     return sortedObject;
 }
 
+function hashString(value) {
+    let hash = 2166136261;
+    const text = String(value ?? '');
+    for (let i = 0; i < text.length; i++) {
+        hash ^= text.charCodeAt(i);
+        hash = Math.imul(hash, 16777619);
+    }
+    return (hash >>> 0).toString();
+}
+
+function getLastExportHashes() {
+    try {
+        const storedValue = localStorage.getItem('lastExportHashes');
+        return storedValue ? JSON.parse(storedValue) : {};
+    } catch (error) {
+        return {};
+    }
+}
+
+function showNoExportChangesMessage() {
+    if (typeof document === 'undefined' || !document.body) {
+        return;
+    }
+
+    let message = document.getElementById('exportStatusMessage');
+    if (!message) {
+        message = document.createElement('div');
+        message.id = 'exportStatusMessage';
+        message.style.position = 'fixed';
+        message.style.right = '20px';
+        message.style.bottom = '20px';
+        message.style.background = 'rgba(0, 0, 0, 0.8)';
+        message.style.color = '#fff';
+        message.style.padding = '8px 12px';
+        message.style.borderRadius = '6px';
+        message.style.fontSize = '12px';
+        message.style.zIndex = '9999';
+        message.style.opacity = '1';
+        message.style.transition = 'opacity 0.2s ease';
+        document.body.appendChild(message);
+    }
+
+    message.textContent = 'No changes to export.';
+    message.hidden = false;
+    message.style.opacity = '1';
+
+    const safeClearTimeout = typeof clearTimeout === 'function' ? clearTimeout : () => {};
+    const schedule = typeof setTimeout === 'function' ? setTimeout : () => 0;
+
+    safeClearTimeout(message._hideTimeout);
+    message._hideTimeout = schedule(() => {
+        message.style.opacity = '0';
+        schedule(() => {
+            message.hidden = true;
+            message.textContent = '';
+        }, 200);
+    }, 1500);
+}
+
 // Function to allow the user to download all localStorage entries as a zip of JSON files
 function downloadAllTimeSplits() {
     if (typeof JSZip === 'undefined') {
@@ -61,28 +120,41 @@ function downloadAllTimeSplits() {
         return;
     }
 
-    const zip = new JSZip();
+    const previousHashes = getLastExportHashes();
+    const changedEntries = {};
+    const currentHashes = {};
 
     for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (!key) {
+        if (!key || key === 'lastExportHashes' || key === 'lastExportTimestamp') {
             continue;
         }
 
         const rawValue = localStorage.getItem(key);
-        let jsonValue = null;
+        const currentHash = hashString(rawValue);
+        currentHashes[key] = currentHash;
 
-        try {
-            jsonValue = rawValue === null ? null : JSON.parse(rawValue);
-        } catch (error) {
-            jsonValue = rawValue;
+        if (previousHashes[key] !== currentHash) {
+            let jsonValue = null;
+            try {
+                jsonValue = rawValue === null ? null : JSON.parse(rawValue);
+            } catch (error) {
+                jsonValue = rawValue;
+            }
+            changedEntries[key] = jsonValue;
         }
-
-        zip.file(`${key}.json`, JSON.stringify(jsonValue, null, 2));
     }
 
-    if (localStorage.length === 0) {
-        zip.file('README.txt', 'No localStorage entries were found to export.');
+    if (Object.keys(changedEntries).length === 0) {
+        showNoExportChangesMessage();
+        return;
+    }
+
+    const zip = new JSZip();
+    const changedKeys = Object.keys(changedEntries);
+    for (let i = 0; i < changedKeys.length; i++) {
+        const key = changedKeys[i];
+        zip.file(`${key}.json`, JSON.stringify(changedEntries[key], null, 2));
     }
 
     zip.generateAsync({ type: 'blob' })
@@ -96,6 +168,7 @@ function downloadAllTimeSplits() {
             downloadAnchorNode.remove();
             URL.revokeObjectURL(url);
 
+            localStorage.setItem('lastExportHashes', JSON.stringify(currentHashes));
             localStorage.setItem('lastExportTimestamp', Date.now().toString());
             if (typeof updateExportButtonVisibility === 'function') {
                 updateExportButtonVisibility();
