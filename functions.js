@@ -351,3 +351,44 @@ function updateNavbarPerDay() {
         }
     }
 }
+
+// Render a consistent navbar into pages. Pages should include a container
+// with id="navbar-root" where the navbar will be injected.
+function renderNavbar() {
+    const root = document.getElementById('navbar-root');
+    if (!root) return;
+
+    const navHtml = `
+    <div class="navbar">
+        <a href="index.html">Home</a>
+        <a href="editSplits.html">Edit Splits</a>
+        <a href="daily.html">Daily Summaries</a>
+        <a href="weekly.html">Weekly Summaries</a>
+        <div id="navbar-per-day"></div>
+    </div>`;
+
+    root.innerHTML = navHtml;
+
+    // mark active link based on current page filename
+    try {
+        const page = window.location.pathname.split('/').pop() || 'index.html';
+        const links = root.querySelectorAll('.navbar a');
+        links.forEach(a => {
+            const href = a.getAttribute('href');
+            if (href === page || (href === 'index.html' && page === '')) {
+                a.classList.add('active');
+            } else {
+                a.classList.remove('active');
+            }
+        });
+    } catch (e) {
+        // ignore
+    }
+
+    // update per-day display immediately
+    if (typeof updateNavbarPerDay === 'function') updateNavbarPerDay();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    renderNavbar();
+});

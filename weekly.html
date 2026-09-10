@@ -80,19 +80,13 @@
         }
         .quarter-table { flex: 1; }
         .quarter-chart { width: 40%; min-width: 300px; }
-        .per-day-good { color: #0f9d58; font-weight: 700; }
-        .per-day-bad { color: #d93025; font-weight: 700; }
+        .per-day-good { color: #0f9d58; }
+        .per-day-bad { color: #d93025; }
     </style>
 </head>
 
 <body>
-    <div class="navbar">
-        <a href="index.html">Home</a>
-        <a href="editSplits.html">Edit Splits</a>
-        <a href="daily.html">Daily Summaries</a>
-        <a href="weekly.html" class="active">Weekly Summaries</a>
-        <div id="navbar-per-day"></div>
-    </div>
+    <div id="navbar-root"></div>
     <script src="functions.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
