@@ -117,47 +117,6 @@
             return sortObjectByDate(weeks, 'desc');
         }
 
-        // Helper: compute per-day hours = totalHours / (5 - weekdaysRemaining - daysOff)
-        // weekdaysRemaining: number of weekdays remaining in that week (Mon-Fri) from today to week end
-        function computePerDay(totalHours, daysOff, weekdaysRemaining = 0) {
-            const doff = isNaN(daysOff) ? 0 : Number(daysOff);
-            const workingDays = 5 - (isNaN(weekdaysRemaining) ? 0 : Number(weekdaysRemaining)) - doff;
-            if (workingDays <= 0) return 0;
-            const v = totalHours / workingDays;
-            return isFinite(v) ? v : 0;
-        }
-
-        // Helper: number of weekdays remaining in the week for a given weekISO (YYYY-MM-DD or ISO string)
-        function weekdaysRemainingInWeek(weekISO) {
-            try {
-                const today = new Date();
-                // normalize to local date (00:00)
-                const t = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-                // start counting from tomorrow (do not count today)
-                t.setDate(t.getDate() + 1);
-                const weekEnd = new Date(weekISO);
-                // if weekEnd is before tomorrow, remaining is 0
-                if (weekEnd < t) return 0;
-
-                let count = 0;
-                const cur = new Date(t);
-                while (cur <= weekEnd) {
-                    const day = cur.getDay();
-                    if (day >= 1 && day <= 5) count++;
-                    cur.setDate(cur.getDate() + 1);
-                }
-                return count;
-            } catch (e) {
-                return 0;
-            }
-        }
-
-        // Helper: format numeric display to 2 decimal places
-        function formatNumber(n) {
-            const num = Number(n) || 0;
-            return num.toFixed(2);
-        }
-
         // Apply styling to a per-day cell based on numeric value
         function stylePerDayCell(cell, value) {
             if (!cell) return;
