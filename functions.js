@@ -349,7 +349,7 @@ function getHoursNeededForNextMilestone(perDay, daysPassed, daysOff = getCurrent
     const off = Math.max(0, Number(daysOff) || 0);
     const effectivePassed = Math.max(1, passed - off);
     const target = getNextMilestoneTarget(value);
-    const totalHoursSoFar = value * effectivePassed;
+    const totalHoursSoFar = value * (passed - off);
     const totalHoursNeeded = target * Math.ceil(effectivePassed);
     return Math.max(0, Number((totalHoursNeeded - totalHoursSoFar).toFixed(2)));
 }
