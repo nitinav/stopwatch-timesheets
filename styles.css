@@ -120,3 +120,71 @@ input[type="time"] {
 #autocomplete-list li:hover {
     background-color: #f1f1f1;
 }
+
+/* Tasks panel: fixed on the right taking 1/4 of the page */
+.tasks-panel {
+    position: fixed;
+    right: 0;
+    top: 60px; /* leave room for navbar */
+    width: 25%;
+    max-width: 380px;
+    height: calc(100% - 70px);
+    background: #fafafa;
+    border-left: 1px solid #e0e0e0;
+    padding: 12px;
+    box-sizing: border-box;
+    overflow: auto;
+    z-index: 900;
+}
+.tasks-panel h3 {
+    margin: 0 0 8px 0;
+    font-size: 1.05rem;
+}
+.tasks-panel ul {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 8px 0;
+}
+.tasks-panel li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 4px;
+    border-radius: 4px;
+}
+.tasks-panel li .task-text {
+    flex: 1;
+    outline: none;
+}
+.tasks-panel li.done .task-text {
+    text-decoration: line-through;
+    color: #777;
+}
+.tasks-panel button.add-task {
+    display: inline-block;
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    background: #fff;
+    cursor: pointer;
+}
+.tasks-panel button.delete-task {
+    background: transparent;
+    border: none;
+    color: #c33;
+    cursor: pointer;
+    margin: 0;
+}
+
+@media (max-width: 900px) {
+    .tasks-panel { display: none; }
+}
+
+/* When the tasks panel is present, give the page room on the right */
+body.with-tasks-panel {
+    padding-right: 25%;
+}
+
+@media (max-width: 900px) {
+    body.with-tasks-panel { padding-right: 0; }
+}

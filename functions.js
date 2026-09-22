@@ -423,3 +423,122 @@ function renderNavbar() {
 document.addEventListener('DOMContentLoaded', () => {
     renderNavbar();
 });
+
+// --- Today's Tasks widget: render, persist, and handle edits ---
+function _loadTodaysTasks() {
+    try {
+        return JSON.parse(localStorage.getItem('todaysTasks') || '[]');
+    } catch (e) {
+        return [];
+    }
+}
+
+function _saveTodaysTasks(tasks) {
+    try {
+        localStorage.setItem('todaysTasks', JSON.stringify(tasks || []));
+    } catch (e) {
+        console.error('Failed to save todaysTasks', e);
+    }
+}
+
+function renderTasks() {
+    if (typeof document === 'undefined' || !document.body) return;
+
+    let panel = document.getElementById('tasks-panel');
+    if (!panel) {
+        panel = document.createElement('aside');
+        panel.id = 'tasks-panel';
+        panel.className = 'tasks-panel';
+
+        panel.innerHTML = `
+            <h3>Today's Tasks</h3>
+            <ul id="tasks-list"></ul>
+            <div>
+                <button class="add-task">Add Task</button>
+            </div>
+        `;
+
+        document.body.appendChild(panel);
+        // mark body so main content gains right padding and isn't covered
+        document.body.classList.add('with-tasks-panel');
+    }
+
+    // ensure body class remains if panel already existed
+    if (document.getElementById('tasks-panel')) {
+        document.body.classList.add('with-tasks-panel');
+    }
+
+    const listEl = panel.querySelector('#tasks-list');
+    const addBtn = panel.querySelector('.add-task');
+
+    let tasks = _loadTodaysTasks();
+
+    function save() { _saveTodaysTasks(tasks); }
+
+    function renderItem(task) {
+        const li = document.createElement('li');
+        li.dataset.id = task.id;
+        if (task.done) li.classList.add('done');
+
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.checked = !!task.done;
+
+        const span = document.createElement('div');
+        span.className = 'task-text';
+        span.contentEditable = 'true';
+        span.textContent = task.text || '';
+
+        const del = document.createElement('button');
+        del.className = 'delete-task';
+        del.textContent = '✕';
+
+        li.appendChild(cb);
+        li.appendChild(span);
+        li.appendChild(del);
+
+        // checkbox toggle
+        cb.addEventListener('change', () => {
+            task.done = cb.checked;
+            li.classList.toggle('done', task.done);
+            save();
+        });
+
+        // text edit (debounced save)
+        span.addEventListener('input', () => {
+            if (li._saveTimeout) clearTimeout(li._saveTimeout);
+            li._saveTimeout = setTimeout(() => {
+                task.text = span.textContent.trim();
+                save();
+            }, 400);
+        });
+
+        // delete
+        del.addEventListener('click', () => {
+            tasks = tasks.filter(t => t.id !== task.id);
+            save();
+            li.remove();
+        });
+
+        listEl.appendChild(li);
+        return li;
+    }
+
+    // clear and render
+    listEl.innerHTML = '';
+    tasks.forEach(t => renderItem(t));
+
+    addBtn.addEventListener('click', () => {
+        const newTask = { id: Date.now(), text: '', done: false };
+        tasks.push(newTask);
+        save();
+        const newLi = renderItem(newTask);
+        const textEl = newLi.querySelector('.task-text');
+        textEl.focus();
+    });
+}
+
+// ensure tasks are rendered when the page is ready
+document.addEventListener('DOMContentLoaded', () => {
+    renderTasks();
+});
