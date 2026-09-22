@@ -182,7 +182,8 @@ input[type="time"] {
 
 /* When the tasks panel is present, give the page room on the right */
 body.with-tasks-panel {
-    padding-right: 25%;
+    /* Match the panel's width (25% but capped at 380px) to avoid gaps */
+    padding-right: min(25%, 380px);
 }
 
 @media (max-width: 900px) {
