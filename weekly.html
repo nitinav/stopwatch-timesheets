@@ -163,21 +163,23 @@
                 const quarterSection = document.createElement('div');
                 const heading = document.createElement('h3');
                 heading.textContent = qk;
-                // compute quarter average (total hours / ((weeks * 5) - sumDaysOff))
                 const weeksInQuarter = quarters[qk] || [];
                 const totalMsSum = weeksInQuarter.reduce((acc, w) => acc + (w.totalDuration || 0), 0);
                 const totalHours = totalMsSum / 3600000;
-                const sumDaysOff = weeksInQuarter.reduce((acc, w) => {
-                    const meta = weeklyMeta[w.weekDate] || { daysOff: 0 };
-                    return acc + (Number(meta.daysOff) || 0);
-                }, 0);
-                const denom = (weeksInQuarter.length * 5) - sumDaysOff;
-                const quarterAvg = denom > 0 ? totalHours / denom : 0;
                 const avgSpan = document.createElement('span');
                 avgSpan.style.marginLeft = '10px';
                 avgSpan.style.fontSize = '0.9em';
                 avgSpan.style.fontWeight = 'normal';
-                avgSpan.textContent = `Average: ${formatNumber(quarterAvg)} h/day`;
+                function updateQuarterAverage() {
+                    const workingDays = weeksInQuarter.reduce((total, week) => {
+                        const meta = weeklyMeta[week.weekDate] || { daysOff: 0 };
+                        const weekdaysRemaining = weekdaysRemainingInWeek(week.weekISO);
+                        return total + 5 - weekdaysRemaining - (Number(meta.daysOff) || 0);
+                    }, 0);
+                    const quarterAvg = workingDays > 0 ? totalHours / workingDays : 0;
+                    avgSpan.textContent = `Average: ${formatNumber(quarterAvg)} h/day`;
+                }
+                updateQuarterAverage();
                 heading.appendChild(avgSpan);
                 quarterSection.appendChild(heading);
 
@@ -248,6 +250,7 @@
                         weeklyMeta[wk.weekDate] = weeklyMeta[wk.weekDate] || { daysOff: 0, comment: '' };
                         weeklyMeta[wk.weekDate].daysOff = v;
                         saveWeeklyMeta();
+                        updateQuarterAverage();
                         const newPerDay = computePerDay(totalHoursNum, v, weekdaysRemaining);
                         const cell = tr.querySelector('.per-day-cell');
                         cell.textContent = formatNumber(newPerDay);
