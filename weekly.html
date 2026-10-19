@@ -117,15 +117,15 @@
             return sortObjectByDate(weeks, 'desc');
         }
 
-        // Apply styling to a per-day cell based on numeric value
-        function stylePerDayCell(cell, value) {
-            if (!cell) return;
-            cell.classList.remove('per-day-good', 'per-day-bad');
+        // Apply the per-day color thresholds to any element displaying an average
+        function stylePerDayValue(element, value) {
+            if (!element) return;
+            element.classList.remove('per-day-good', 'per-day-bad');
             const v = Number(value) || 0;
             if (v >= 7) {
-                cell.classList.add('per-day-good');
+                element.classList.add('per-day-good');
             } else if (v < 6) {
-                cell.classList.add('per-day-bad');
+                element.classList.add('per-day-bad');
             }
         }
 
@@ -178,6 +178,7 @@
                     }, 0);
                     const quarterAvg = workingDays > 0 ? totalHours / workingDays : 0;
                     avgSpan.textContent = `Average: ${formatNumber(quarterAvg)} h/day`;
+                    stylePerDayValue(avgSpan, quarterAvg);
                 }
                 updateQuarterAverage();
                 heading.appendChild(avgSpan);
@@ -235,7 +236,7 @@
 
                     // style per-day cell according to value
                     const perDayCell = tr.querySelector('.per-day-cell');
-                    stylePerDayCell(perDayCell, perDayValue);
+                    stylePerDayValue(perDayCell, perDayValue);
 
                     // Days Off input
                     const daysOffInput = document.createElement('input');
@@ -254,7 +255,7 @@
                         const newPerDay = computePerDay(totalHoursNum, v, weekdaysRemaining);
                         const cell = tr.querySelector('.per-day-cell');
                         cell.textContent = formatNumber(newPerDay);
-                        stylePerDayCell(cell, newPerDay);
+                        stylePerDayValue(cell, newPerDay);
                     });
 
                     tr.querySelector('.days-off-cell').appendChild(daysOffInput);
