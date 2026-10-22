@@ -11,7 +11,11 @@ const context = {
     setItem() {},
     removeItem() {}
   },
-  document: { getElementById() { return null; }, querySelector() { return null; } },
+  document: {
+    addEventListener() {},
+    getElementById() { return null; },
+    querySelector() { return null; }
+  },
   window: {},
   Date,
 };
@@ -48,8 +52,24 @@ function makeContext(storageState = {}) {
     }
   };
 
+  const navbarClasses = new Set();
+  const navbar = {
+    classList: {
+      add(className) {
+        navbarClasses.add(className);
+      },
+      remove(...classNames) {
+        classNames.forEach(className => navbarClasses.delete(className));
+      },
+      contains(className) {
+        return navbarClasses.has(className);
+      }
+    }
+  };
+  const perDayDisplay = { textContent: '' };
   const document = {
     body,
+    addEventListener() {},
     createElement(tagName) {
       return {
         tagName,
@@ -64,8 +84,12 @@ function makeContext(storageState = {}) {
         setAttribute() {},
       };
     },
-    getElementById() { return null; },
-    querySelector() { return null; }
+    getElementById(id) {
+      return id === 'navbar-per-day' ? perDayDisplay : null;
+    },
+    querySelector(selector) {
+      return selector === '.navbar' ? navbar : null;
+    }
   };
 
   const context = {
@@ -94,7 +118,7 @@ function makeContext(storageState = {}) {
   };
 
   vm.runInNewContext(source, context);
-  return { context, storage, document };
+  return { context, storage, document, navbar, navbarClasses, perDayDisplay };
 }
 
 function hashString(value) {
@@ -126,10 +150,41 @@ test('milestone target is 7 for averages between 6 and 7', () => {
   assert.equal(getNeeded(6.25, 4, 1), 2.25);
 });
 
-test('no additional hours are needed once average is at or above 7', () => {
+test('the 7-hour average remains its own milestone', () => {
   assert.equal(getTarget(7.00), 7);
   assert.equal(getNeeded(7.00, 4, 0), 0);
+});
+
+test('milestone target is 8 for averages above 7', () => {
+  assert.equal(getTarget(7.01), 8);
+  assert.equal(getTarget(8), 8);
+  assert.equal(getNeeded(7.25, 4, 0), 3);
+  assert.equal(getNeeded(7.25, 4, 1), 2.25);
   assert.equal(getNeeded(9.25, 4, 1), 0);
+});
+
+test('navbar shows hours needed to reach 8 above 7 and turns golden above 8', () => {
+  const { context, navbar, perDayDisplay } = makeContext();
+  context.getCurrentWeekPerDay = () => 7.25;
+  context.weekdaysRemainingInWeek = () => 1;
+
+  context.updateNavbarPerDay();
+
+  assert.equal(perDayDisplay.textContent, 'This Week: 7.25 h/day • Need 3.00 h today to reach 8.00 h/day');
+  assert.equal(navbar.classList.contains('per-day-good'), true);
+
+  context.getCurrentWeekPerDay = () => 8;
+  context.updateNavbarPerDay();
+
+  assert.equal(navbar.classList.contains('per-day-good'), true);
+  assert.equal(navbar.classList.contains('per-day-excellent'), false);
+
+  context.getCurrentWeekPerDay = () => 8.01;
+  context.updateNavbarPerDay();
+
+  assert.equal(navbar.classList.contains('per-day-good'), false);
+  assert.equal(navbar.classList.contains('per-day-excellent'), true);
+  assert.equal(navbar.classList.contains('per-day-bad'), false);
 });
 
 test('downloadAllTimeSplits only includes entries changed since the last export', async () => {

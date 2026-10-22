@@ -312,7 +312,7 @@ function getNextMilestoneTarget(perDay) {
     const value = Number(perDay) || 0;
     if (value < 6) return 6;
     if (value < 7) return 7;
-    return 7;
+    return 8;
 }
 
 // Count the number of workdays completed in the current week, including today.
@@ -374,8 +374,10 @@ function updateNavbarPerDay() {
         perDayDisplay.textContent = `This Week: ${formatNumber(perDay)} h/day • Need ${formatNumber(hoursNeeded)} h today to reach ${formatNumber(target)} h/day`;
 
         // Apply navbar background color based on value
-        navbar.classList.remove('per-day-good', 'per-day-bad');
-        if (perDay >= 7) {
+        navbar.classList.remove('per-day-good', 'per-day-bad', 'per-day-excellent');
+        if (perDay > 8) {
+            navbar.classList.add('per-day-excellent');
+        } else if (perDay >= 7) {
             navbar.classList.add('per-day-good');
         } else if (perDay < 6) {
             navbar.classList.add('per-day-bad');
